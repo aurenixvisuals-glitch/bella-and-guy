@@ -6,6 +6,7 @@ import { allCategories } from "../lib/servicesData";
 export default function BookingForm() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [service, setService] = useState("");
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
@@ -44,13 +45,24 @@ export default function BookingForm() {
     setLoading(true);
     try {
       const { error } = await supabase.from("appointments").insert([{
-        full_name: fullName, phone, service,
+        full_name: fullName, phone, email: email || null, service,
         booking_date: bookingDate, booking_time: bookingTime,
         is_home_service: isHome, address: isHome ? address : null,
       }]);
       if (error) throw error;
+      // Send email notifications (silently fails if not configured)
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "created",
+            booking: { full_name: fullName, email, phone, service, booking_date: bookingDate, booking_time: bookingTime, address: isHome ? address : null },
+          }),
+        });
+      } catch {}
       setSuccess(true);
-      setFullName(""); setPhone(""); setService("");
+      setFullName(""); setPhone(""); setEmail(""); setService("");
       setBookingDate(""); setBookingTime("");
       setIsHome(false); setAddress(""); setPreselected(false);
       setTimeout(() => setSuccess(false), 6000);
@@ -173,6 +185,12 @@ export default function BookingForm() {
                   <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                     placeholder="+91 XXXXXXXXXX" className="field-input" required />
                 </div>
+              </div>
+
+              <div>
+                <label className="field-label">Email Address <span style={{ color:"rgba(0,0,0,0.25)",fontWeight:400,textTransform:"none",letterSpacing:0 }}>(optional — for confirmation email)</span></label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="your@email.com" className="field-input" />
               </div>
 
               <div>

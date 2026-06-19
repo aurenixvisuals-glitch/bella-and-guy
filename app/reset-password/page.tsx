@@ -45,8 +45,7 @@ export default function ResetPasswordPage() {
         .rp-page { min-height: 100vh; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; padding: 40px 16px; position: relative; overflow: hidden; }
         .rp-glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.12; pointer-events: none; }
         .rp-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.15); border-radius: 8px; padding: 48px 40px; width: 100%; max-width: 420px; position: relative; z-index: 1; }
-        .rp-logo { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: #fff; text-align: center; margin-bottom: 8px; }
-        .rp-logo span { color: #C9A84C; }
+        .rp-logo { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; margin: 0 auto 8px; display: block; }
         .rp-subtitle { text-align: center; font-size: 11px; color: rgba(201,168,76,0.55); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 36px; }
         .rp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 500; color: #FFFFFF; margin-bottom: 8px; }
         .rp-desc { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 28px; line-height: 1.6; }
@@ -69,7 +68,7 @@ export default function ResetPasswordPage() {
         <div className="rp-glow" style={{ width: 300, height: 300, background: "#6B3FA0", bottom: -80, left: -80 }} />
 
         <div className="rp-card">
-          <div className="rp-logo">Bella <span>&</span> Guy</div>
+          <img src="/images/logo.png" alt="Bella & Guy" className="rp-logo" />
           <div className="rp-subtitle">Member Portal</div>
 
           <div className="rp-title">Set New Password</div>

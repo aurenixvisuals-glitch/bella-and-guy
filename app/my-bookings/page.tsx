@@ -53,6 +53,7 @@ export default function MyBookings() {
   const [userPhone, setUserPhone] = useState("");
   const [memberSince, setMemberSince] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showLogout, setShowLogout] = useState(false);
 
   useEffect(() => {
     checkSession();
@@ -89,7 +90,7 @@ export default function MyBookings() {
     setLoading(false);
   }
 
-  async function logout() {
+  async function doLogout() {
     await supabase.auth.signOut();
     router.push("/");
   }
@@ -215,7 +216,7 @@ export default function MyBookings() {
                 Back to Home
               </a>
               <a href="/#booking" className="mb-book-link">+ New Booking</a>
-              <button onClick={logout} className="mb-logout-btn">Sign Out</button>
+              <button onClick={() => setShowLogout(true)} className="mb-logout-btn">Sign Out</button>
             </div>
           </div>
         </div>
@@ -462,6 +463,36 @@ export default function MyBookings() {
           )}
         </div>
       </div>
+
+      {showLogout && (
+        <>
+          <style>{`
+            .mb-ovl{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:mbFd 0.2s ease;}
+            @keyframes mbFd{from{opacity:0}to{opacity:1}}
+            .mb-cm{background:rgba(18,14,10,0.92);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.1);border-top:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:32px 28px 24px;width:100%;max-width:340px;margin:16px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.12),0 32px 64px rgba(0,0,0,0.6);animation:mbUp 0.25s cubic-bezier(0.22,1,0.36,1);}
+            @keyframes mbUp{from{opacity:0;transform:translateY(16px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+            .mb-ci{width:44px;height:44px;border-radius:12px;background:rgba(245,101,101,0.1);border:1px solid rgba(245,101,101,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px;}
+            .mb-ct{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;font-family:'Inter',sans-serif;}
+            .mb-cx{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:24px;}
+            .mb-cbs{display:flex;gap:10px;}
+            .mb-ck{flex:1;padding:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+            .mb-ck:hover{background:rgba(255,255,255,0.09);color:#fff;}
+            .mb-co{flex:1;padding:11px;background:rgba(245,101,101,0.15);border:1px solid rgba(245,101,101,0.3);border-radius:10px;color:#f87171;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+            .mb-co:hover{background:rgba(245,101,101,0.25);}
+          `}</style>
+          <div className="mb-ovl" onClick={() => setShowLogout(false)}>
+            <div className="mb-cm" onClick={e => e.stopPropagation()}>
+              <div className="mb-ci">↩️</div>
+              <div className="mb-ct">Sign Out</div>
+              <div className="mb-cx">Are you sure you want to sign out from your account?</div>
+              <div className="mb-cbs">
+                <button className="mb-ck" onClick={() => setShowLogout(false)}>Stay</button>
+                <button className="mb-co" onClick={doLogout}>Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

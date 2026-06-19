@@ -14,15 +14,26 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 // ── Types ──────────────────────────────────────────────
-type Tab = "dashboard" | "bookings" | "revenue" | "staff" | "contacts";
+type Tab = "dashboard" | "bookings" | "revenue" | "staff" | "contacts" | "backup" | "logs";
+type ConfirmModal = { title: string; message: string; onConfirm: () => void; confirmLabel?: string; icon?: string; danger?: boolean } | null;
 type FilterType = "all" | "today" | "week" | "month";
 
 type Booking = {
-  id: number; full_name: string; phone: string; service: string;
+  id: number; full_name: string; phone: string; email?: string; service: string;
   booking_date: string; booking_time: string;
   address?: string; status: string; staff?: string;
   is_home_service?: boolean; created_at?: string;
 };
+
+async function sendEmailNotification(type: string, booking: Booking & { new_date?: string; new_time?: string }) {
+  try {
+    await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, booking }),
+    });
+  } catch {}
+}
 type Contact = { id: number; name: string; phone: string; message: string; };
 type StaffRow = { id: number; name: string; email?: string; role: string; active: boolean; };
 
@@ -51,7 +62,8 @@ const CSS = `
 /* SIDEBAR */
 .sb { width: 224px; min-width: 224px; background: rgba(8,8,18,0.98); border-right: 1px solid rgba(201,168,76,0.1); display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; z-index: 100; }
 .sb-logo { padding: 22px 18px 18px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 11px; }
-.sb-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg,#c9a84c,#f5d98b); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; color: #1a1000; box-shadow: 0 4px 16px rgba(201,168,76,0.3); flex-shrink: 0; }
+.sb-icon { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 4px 16px rgba(201,168,76,0.3); }
+.sb-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sb-title { font-size: 14px; font-weight: 700; color: #fff; }
 .sb-sub { font-size: 10px; color: #3a3a3a; margin-top: 2px; }
 .sb-nav { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
@@ -135,6 +147,64 @@ td { padding: 11px 14px; font-size: 12px; color: #bbb; vertical-align: middle; }
 .fb-btn:hover { background: rgba(255,255,255,0.06); color: #888; }
 .fb-btn.on { background: #c9a84c; color: #0f0f12; border-color: #c9a84c; font-weight: 600; }
 
+/* BACKUP TAB */
+.bk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.bk-card { background: rgba(12,12,20,0.97); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 22px 20px; }
+.bk-card-title { font-size: 11px; font-weight: 700; color: #484848; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.bk-status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.bk-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 13px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: #bbb; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; margin-bottom: 10px; text-align: left; }
+.bk-btn:last-child { margin-bottom: 0; }
+.bk-btn:hover:not(:disabled) { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.2); color: #c9a84c; }
+.bk-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.bk-btn-primary { background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.08)); border-color: rgba(201,168,76,0.3); color: #c9a84c; }
+.bk-btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.12)); border-color: rgba(201,168,76,0.5); }
+.bk-btn-icon { font-size: 18px; flex-shrink: 0; }
+.bk-btn-info { flex: 1; }
+.bk-btn-label { font-size: 13px; font-weight: 600; display: block; }
+.bk-btn-sub { font-size: 11px; color: #484848; font-weight: 400; margin-top: 2px; display: block; }
+.bk-btn-primary .bk-btn-sub { color: rgba(201,168,76,0.55); }
+.bk-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 4px; }
+.bk-toggle-label { font-size: 13px; color: #888; font-weight: 500; }
+.bk-switch { position: relative; width: 40px; height: 22px; cursor: pointer; }
+.bk-switch input { opacity: 0; width: 0; height: 0; }
+.bk-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.08); border-radius: 22px; transition: 0.25s; }
+.bk-slider::before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #555; border-radius: 50%; transition: 0.25s; }
+input:checked + .bk-slider { background: rgba(201,168,76,0.3); }
+input:checked + .bk-slider::before { background: #c9a84c; transform: translateX(18px); }
+.bk-hist-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.bk-hist-row:last-child { border-bottom: none; }
+.bk-hist-icon { font-size: 15px; opacity: 0.6; }
+.bk-hist-info { flex: 1; }
+.bk-hist-type { font-size: 12px; font-weight: 600; color: #888; }
+.bk-hist-date { font-size: 11px; color: #333; margin-top: 1px; }
+.bk-hist-size { font-size: 11px; color: #333; }
+.bk-empty { text-align: center; color: #2a2a2a; font-size: 13px; padding: 24px 0; }
+@media (max-width: 720px) { .bk-grid { grid-template-columns: 1fr; } }
+
+/* LOGS TAB */
+.log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.log-title { font-size: 18px; font-weight: 700; color: #c9a84c; letter-spacing: -0.3px; }
+.log-count { font-size: 12px; color: #555; background: rgba(255,255,255,0.04); border-radius: 20px; padding: 3px 10px; }
+.log-table { width: 100%; border-collapse: collapse; }
+.log-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #555; padding: 0 14px 10px; text-align: left; }
+.log-table td { padding: 12px 14px; font-size: 12.5px; vertical-align: top; border-top: 1px solid rgba(255,255,255,0.025); }
+.log-table tr:hover td { background: rgba(255,255,255,0.02); }
+.log-time { color: #444; font-family: monospace; font-size: 11px; white-space: nowrap; }
+.log-actor { font-weight: 600; color: #aaa; font-size: 12px; }
+.log-badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; white-space: nowrap; }
+.log-badge-status  { background: rgba(100,180,100,0.12); color: #5cbc5c; }
+.log-badge-cancel  { background: rgba(245,101,101,0.12); color: #f56565; }
+.log-badge-delete  { background: rgba(245,101,101,0.18); color: #fc8181; }
+.log-badge-assign  { background: rgba(100,150,220,0.12); color: #7baee8; }
+.log-badge-backup  { background: rgba(201,168,76,0.12); color: #c9a84c; }
+.log-badge-login   { background: rgba(180,120,220,0.12); color: #c084fc; }
+.log-badge-default { background: rgba(255,255,255,0.05); color: #777; }
+.log-detail { color: #555; font-size: 12px; line-height: 1.5; }
+.log-empty { text-align: center; padding: 60px 0; color: #333; }
+.log-empty-icon { font-size: 36px; margin-bottom: 10px; }
+.log-empty-text { font-size: 14px; color: #444; }
+.log-empty-sub { font-size: 12px; color: #333; margin-top: 6px; }
+
 /* REVENUE TAB */
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; margin-bottom: 22px; }
 .kpi { background: rgba(12,12,20,0.97); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 18px 16px; }
@@ -213,7 +283,31 @@ export default function AdminPage() {
   const [notification, setNotification] = useState("");
   const [loading, setLoading]     = useState(true);
   const [currentStaff, setCurrentStaff] = useState<StaffRow | null>(null);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModal>(null);
+  const [secEvents, setSecEvents] = useState<{ created_at: string; locked_for_seconds: number }[]>([]);
+  const [autoBackup, setAutoBackup] = useState(() => { try { return localStorage.getItem("bg_auto_backup") === "1"; } catch { return false; } });
+  const [backupHistory, setBackupHistory] = useState<{ date: string; type: string; size: string }[]>(() => { try { return JSON.parse(localStorage.getItem("bg_backup_history") || "[]"); } catch { return []; } });
+  const [backingUp, setBackingUp] = useState(false);
+  const [activityLogs, setActivityLogs] = useState<{ id: number; created_at: string; actor: string; actor_role: string; action: string; details: string; entity_type?: string }[]>([]);
   const isAdmin = !currentStaff || currentStaff.role === "admin";
+
+  function showConfirm(title: string, message: string, onConfirm: () => void, opts?: { confirmLabel?: string; icon?: string; danger?: boolean }) {
+    setConfirmModal({ title, message, onConfirm, ...opts });
+  }
+
+  async function logActivity(action: string, details: string, entityType?: string, entityId?: number) {
+    try {
+      await (supabase as any).from("activity_logs").insert({
+        actor: currentStaff?.name || "Admin",
+        actor_role: currentStaff?.role || "admin",
+        action, details,
+        entity_type: entityType,
+        entity_id: entityId,
+      });
+      const { data } = await (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100);
+      if (data) setActivityLogs(data);
+    } catch {}
+  }
 
   // ── Fetch ──────────────────────────────────────────
   useEffect(() => { Notification.requestPermission(); }, []);
@@ -245,7 +339,30 @@ export default function AdminPage() {
     if (!staff) { await supabase.auth.signOut(); router.push("/login"); return; }
     setCurrentStaff(staff);
     await Promise.all([fetchBookings(staff), fetchContacts(), fetchStaff()]);
+    // Try fetch security events (silently skip if table doesn't exist)
+    try {
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: se } = await (supabase as any).from("security_events").select("created_at,locked_for_seconds").gte("created_at", since).order("created_at", { ascending: false });
+      if (se?.length) setSecEvents(se);
+    } catch {}
+    // Try fetch activity logs
+    try {
+      const { data: al } = await (supabase as any).from("activity_logs").select("*").order("created_at", { ascending: false }).limit(100);
+      if (al) setActivityLogs(al);
+    } catch {}
+    // Log admin session start
+    try {
+      await (supabase as any).from("activity_logs").insert({ actor: staff.name, actor_role: staff.role, action: "LOGIN", details: "Admin panel opened", entity_type: "session" });
+    } catch {}
     setLoading(false);
+    // Auto-backup: trigger once per day if enabled
+    try {
+      const autoOn  = localStorage.getItem("bg_auto_backup") === "1";
+      const lastBk  = localStorage.getItem("bg_last_backup");
+      if (autoOn && lastBk !== new Date().toDateString()) {
+        setTimeout(() => backupFull(), 4000);
+      }
+    } catch {}
   }
 
   async function fetchBookings(staff?: StaffRow | null) {
@@ -261,30 +378,66 @@ export default function AdminPage() {
   }
 
   async function fetchStaff() {
-    const { data } = await supabase.from("staff").select("*").eq("active", true);
+    const { data } = await supabase.from("staff").select("*").eq("active", true).neq("role", "admin");
     if (data) setStaffs(data);
   }
 
   async function updateStatus(id: number, status: string) {
     await supabase.from("appointments").update({ status }).eq("id", id);
+    const b = bookings.find(bk => bk.id === id);
+    if (b) logActivity("STATUS_CHANGED", `${b.full_name}'s ${b.service} changed to ${status}`, "booking", id);
     fetchBookings(currentStaff);
   }
 
   async function assignStaff(id: number, staff: string) {
     await supabase.from("appointments").update({ staff }).eq("id", id);
+    const b = bookings.find(bk => bk.id === id);
+    if (b) logActivity("STAFF_ASSIGNED", `${staff || "Unassigned"} assigned to ${b.full_name}'s ${b.service}`, "booking", id);
     fetchBookings(currentStaff);
   }
 
-  async function deleteBooking(id: number) {
-    if (!confirm("Delete this booking permanently?")) return;
-    await supabase.from("appointments").delete().eq("id", id);
-    fetchBookings(currentStaff);
+  function cancelBooking(b: Booking) {
+    showConfirm(
+      "Cancel Booking",
+      `Mark ${b.full_name}'s ${b.service} on ${b.booking_date} as Cancelled? This can be undone by changing the status back.`,
+      async () => {
+        setConfirmModal(null);
+        await updateStatus(b.id, "Cancelled");
+        logActivity("BOOKING_CANCELLED", `${b.full_name}'s ${b.service} on ${b.booking_date} cancelled`, "booking", b.id);
+        sendWA(b.phone, `Hello ${b.full_name}, we regret to inform you that your appointment has been cancelled.\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nWe apologize for the inconvenience. Please contact us to reschedule.\n\n— Bella & Guy Salon`);
+        sendEmailNotification("cancelled", b);
+      },
+      { confirmLabel: "Yes, Cancel It", icon: "🚫", danger: false }
+    );
   }
 
-  async function deleteContact(id: number) {
-    if (!confirm("Delete this message?")) return;
-    await supabase.from("contacts").delete().eq("id", id);
-    fetchContacts();
+  function deleteBooking(id: number) {
+    const b = bookings.find(bk => bk.id === id);
+    showConfirm(
+      "Delete Booking",
+      "This booking will be permanently deleted and cannot be recovered.",
+      async () => {
+        setConfirmModal(null);
+        await supabase.from("appointments").delete().eq("id", id);
+        if (b) logActivity("BOOKING_DELETED", `${b.full_name}'s ${b.service} on ${b.booking_date} deleted`, "booking", id);
+        fetchBookings(currentStaff);
+      },
+      { confirmLabel: "Delete", icon: "🗑️", danger: true }
+    );
+  }
+
+  function deleteContact(id: number) {
+    const c = contacts.find(ct => ct.id === id);
+    showConfirm(
+      "Delete Message",
+      "This contact message will be permanently deleted.",
+      async () => {
+        setConfirmModal(null);
+        await supabase.from("contacts").delete().eq("id", id);
+        if (c) logActivity("CONTACT_DELETED", `Message from ${c.name} (${c.phone}) deleted`, "contact", id);
+        fetchContacts();
+      }
+    );
   }
 
   // ── Computed values ───────────────────────────────
@@ -353,94 +506,291 @@ export default function AdminPage() {
   // Tomorrow bookings
   const tmrBookings = bookings.filter(b => b.booking_date === tomorrow);
 
+  // ── PDF Helpers ────────────────────────────────────
+  function pdfHeader(doc: jsPDF, title: string, subtitle: string) {
+    const W = doc.internal.pageSize.getWidth();
+    // Gold top bar
+    doc.setFillColor(201, 168, 76);
+    doc.rect(0, 0, W, 2, "F");
+    // Header bg
+    doc.setFillColor(252, 250, 245);
+    doc.rect(0, 2, W, 42, "F");
+    // Salon name
+    doc.setFontSize(22); doc.setTextColor(15, 15, 20);
+    doc.setFont("helvetica", "bold");
+    doc.text("BELLA & GUY", 14, 18);
+    // Gold ampersand accent
+    doc.setFontSize(22); doc.setTextColor(201, 168, 76);
+    // Tagline
+    doc.setFontSize(8); doc.setTextColor(160, 140, 100);
+    doc.setFont("helvetica", "normal");
+    doc.text("Premium Unisex Salon  |  Wave City, Ghaziabad  |  +91 96259 28495", 14, 26);
+    // Divider line
+    doc.setDrawColor(201, 168, 76); doc.setLineWidth(0.4);
+    doc.line(14, 30, W - 14, 30);
+    // Report title
+    doc.setFontSize(13); doc.setTextColor(15, 15, 20);
+    doc.setFont("helvetica", "bold");
+    doc.text(title, 14, 39);
+    // Subtitle / date
+    doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(140, 130, 110);
+    doc.text(subtitle, W - 14, 39, { align: "right" });
+    // Reset bg
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 44, W, doc.internal.pageSize.getHeight() - 44, "F");
+  }
+
+  function pdfFooter(doc: jsPDF) {
+    const W = doc.internal.pageSize.getWidth();
+    const H = doc.internal.pageSize.getHeight();
+    doc.setFillColor(252, 250, 245);
+    doc.rect(0, H - 14, W, 14, "F");
+    doc.setDrawColor(220, 210, 185); doc.setLineWidth(0.3);
+    doc.line(14, H - 14, W - 14, H - 14);
+    doc.setFontSize(7.5); doc.setTextColor(180, 160, 110); doc.setFont("helvetica", "normal");
+    doc.text("Bella & Guy Salon  —  Confidential Business Report", 14, H - 5);
+    doc.text(`Generated: ${new Date().toLocaleString("en-IN")}`, W - 14, H - 5, { align: "right" });
+  }
+
+  function pdfStatBox(doc: jsPDF, x: number, y: number, w: number, label: string, value: string, accent = false) {
+    doc.setFillColor(accent ? 252 : 248, accent ? 248 : 248, accent ? 235 : 248);
+    doc.setDrawColor(accent ? 201 : 220, accent ? 168 : 210, accent ? 76 : 190);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(x, y, w, 18, 2, 2, "FD");
+    doc.setFontSize(7); doc.setTextColor(140, 130, 110); doc.setFont("helvetica", "normal");
+    doc.text(label.toUpperCase(), x + 5, y + 6.5);
+    doc.setFontSize(11); doc.setTextColor(accent ? 160 : 30, accent ? 120 : 30, accent ? 20 : 30);
+    doc.setFont("helvetica", "bold");
+    doc.text(value, x + 5, y + 14);
+  }
+
   // ── PDF Exports ────────────────────────────────────
   function pdfAppointments() {
     const doc = new jsPDF();
-    doc.setFontSize(18); doc.setTextColor(201, 168, 76);
-    doc.text("Bella & Guy — Appointments Report", 14, 18);
-    doc.setFontSize(10); doc.setTextColor(120, 120, 120);
-    doc.text(`Generated: ${new Date().toLocaleDateString("en-IN")}  |  Total: ${filteredBookings.length}`, 14, 26);
+    const W = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"long", year:"numeric" });
+
+    pdfHeader(doc, "Appointments Report", dateStr);
+
+    // Stats row
+    const confirmed = filteredBookings.filter(b => b.status === "Confirmed").length;
+    const completed = filteredBookings.filter(b => b.status === "Completed").length;
+    const cancelled = filteredBookings.filter(b => b.status === "Cancelled").length;
+    const bw = (W - 28) / 4;
+    pdfStatBox(doc, 14,      48, bw - 3, "Total Bookings",  String(filteredBookings.length));
+    pdfStatBox(doc, 14 + bw, 48, bw - 3, "Confirmed",       String(confirmed));
+    pdfStatBox(doc, 14 + bw*2, 48, bw - 3, "Completed",    String(completed));
+    pdfStatBox(doc, 14 + bw*3, 48, bw - 3, "Total Revenue", `Rs.${totalRevenue.toLocaleString()}`, true);
+
     autoTable(doc, {
-      startY: 32,
-      head: [["#", "Name", "Phone", "Service", "Date", "Time", "Status", "Staff", "Type"]],
+      startY: 70,
+      head: [["#", "Client Name", "Phone", "Service", "Date", "Time", "Status", "Staff", "Type"]],
       body: filteredBookings.map((b, i) => [
-        i+1, b.full_name, b.phone, b.service, b.booking_date, b.booking_time,
+        i + 1, b.full_name, b.phone, b.service,
+        b.booking_date, b.booking_time,
         b.status, b.staff || "—", b.address ? "Home" : "Salon"
       ]),
-      headStyles: { fillColor: [20, 20, 30], textColor: [201, 168, 76], fontSize: 8 },
-      bodyStyles: { fontSize: 8, textColor: [200, 200, 200], fillColor: [14, 14, 22] },
-      alternateRowStyles: { fillColor: [18, 18, 28] },
-      styles: { cellPadding: 3 },
+      headStyles: {
+        fillColor: [30, 25, 10], textColor: [201, 168, 76],
+        fontSize: 8, fontStyle: "bold", cellPadding: 4,
+      },
+      bodyStyles: { fontSize: 8, textColor: [40, 35, 25], cellPadding: 3.5 },
+      alternateRowStyles: { fillColor: [252, 250, 244] },
+      styles: { lineColor: [230, 220, 200], lineWidth: 0.2 },
+      columnStyles: {
+        0: { cellWidth: 8, halign: "center" },
+        6: { fontStyle: "bold" },
+      },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 6) {
+          const status = data.cell.raw as string;
+          if (status === "Completed")  data.cell.styles.textColor = [34, 150, 80];
+          if (status === "Confirmed")  data.cell.styles.textColor = [30, 120, 200];
+          if (status === "Cancelled")  data.cell.styles.textColor = [200, 60, 60];
+          if (status === "Pending")    data.cell.styles.textColor = [180, 140, 20];
+        }
+      },
+      didDrawPage: () => pdfFooter(doc),
     });
-    const pg = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFontSize(10); doc.setTextColor(79, 208, 128);
-    doc.text(`Total Revenue (non-cancelled): ₹${totalRevenue.toLocaleString()}`, 14, pg);
-    doc.save(`appointments-${today}.pdf`);
+
+    doc.save(`bella-guy-appointments-${today}.pdf`);
   }
 
   function pdfRevenue() {
     const doc = new jsPDF();
-    doc.setFontSize(18); doc.setTextColor(201, 168, 76);
-    doc.text("Bella & Guy — Revenue Report", 14, 18);
-    doc.setFontSize(10); doc.setTextColor(120,120,120);
-    doc.text(`Generated: ${new Date().toLocaleDateString("en-IN")}`, 14, 26);
+    const W = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"long", year:"numeric" });
 
-    doc.setFontSize(11); doc.setTextColor(255,255,255);
-    doc.text(`Total Revenue: ₹${totalRevenue.toLocaleString()}`, 14, 36);
-    doc.text(`This Month: ₹${monthRevenue.toLocaleString()}`, 14, 44);
-    doc.text(`Today: ₹${todayRevenue.toLocaleString()}`, 14, 52);
-    doc.text(`Avg Booking Value: ₹${avgBooking.toLocaleString()}`, 14, 60);
+    pdfHeader(doc, "Revenue Report", dateStr);
+
+    // Stats
+    const bw = (W - 28) / 4;
+    pdfStatBox(doc, 14,        48, bw - 3, "Total Revenue",   `Rs.${totalRevenue.toLocaleString()}`,  true);
+    pdfStatBox(doc, 14 + bw,   48, bw - 3, "This Month",      `Rs.${monthRevenue.toLocaleString()}`);
+    pdfStatBox(doc, 14 + bw*2, 48, bw - 3, "Today",           `Rs.${todayRevenue.toLocaleString()}`);
+    pdfStatBox(doc, 14 + bw*3, 48, bw - 3, "Avg Booking",     `Rs.${avgBooking.toLocaleString()}`);
+
+    // Monthly breakdown
+    doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 25, 10);
+    doc.text("Monthly Breakdown", 14, 74);
+    doc.setDrawColor(201, 168, 76); doc.setLineWidth(0.3);
+    doc.line(14, 76, 60, 76);
 
     autoTable(doc, {
-      startY: 68,
-      head: [["Month", "Revenue (₹)", "Bookings"]],
-      body: monthlyChart.map(m => [m.name, `₹${m.Revenue.toLocaleString()}`, m.Bookings]),
-      headStyles: { fillColor: [20,20,30], textColor: [201,168,76], fontSize: 9 },
-      bodyStyles: { fontSize: 9, textColor: [200,200,200], fillColor: [14,14,22] },
-      alternateRowStyles: { fillColor: [18,18,28] },
+      startY: 79,
+      head: [["Month", "Revenue (Rs.)", "Bookings"]],
+      body: monthlyChart.map(m => [m.name, `Rs.${m.Revenue.toLocaleString()}`, m.Bookings]),
+      headStyles: { fillColor: [30, 25, 10], textColor: [201, 168, 76], fontSize: 9, fontStyle: "bold", cellPadding: 4 },
+      bodyStyles: { fontSize: 9, textColor: [40, 35, 25], cellPadding: 3.5 },
+      alternateRowStyles: { fillColor: [252, 250, 244] },
+      styles: { lineColor: [230, 220, 200], lineWidth: 0.2 },
+      tableWidth: (W - 28) / 2,
+      didDrawPage: () => pdfFooter(doc),
     });
 
-    const y2 = (doc as any).lastAutoTable.finalY + 10;
-    doc.setFontSize(12); doc.setTextColor(201,168,76);
+    const y2 = (doc as any).lastAutoTable.finalY + 12;
+    doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(30, 25, 10);
     doc.text("Top Services by Revenue", 14, y2);
+    doc.setDrawColor(201, 168, 76); doc.setLineWidth(0.3);
+    doc.line(14, y2 + 2, 70, y2 + 2);
+
     autoTable(doc, {
-      startY: y2 + 6,
-      head: [["Service", "Revenue (₹)"]],
-      body: serviceRevenue.map(([s, r]) => [s, `₹${r.toLocaleString()}`]),
-      headStyles: { fillColor: [20,20,30], textColor: [201,168,76], fontSize: 9 },
-      bodyStyles: { fontSize: 9, textColor: [200,200,200], fillColor: [14,14,22] },
-      alternateRowStyles: { fillColor: [18,18,28] },
+      startY: y2 + 5,
+      head: [["Service", "Revenue (Rs.)"]],
+      body: serviceRevenue.map(([s, r]) => [s, `Rs.${(r as number).toLocaleString()}`]),
+      headStyles: { fillColor: [30, 25, 10], textColor: [201, 168, 76], fontSize: 9, fontStyle: "bold", cellPadding: 4 },
+      bodyStyles: { fontSize: 9, textColor: [40, 35, 25], cellPadding: 3.5 },
+      alternateRowStyles: { fillColor: [252, 250, 244] },
+      styles: { lineColor: [230, 220, 200], lineWidth: 0.2 },
+      tableWidth: (W - 28) / 2,
+      didDrawPage: () => pdfFooter(doc),
     });
-    doc.save(`revenue-report-${today}.pdf`);
+
+    pdfFooter(doc);
+    doc.save(`bella-guy-revenue-${today}.pdf`);
   }
 
   function pdfStaff() {
-    const doc = new jsPDF();
-    doc.setFontSize(18); doc.setTextColor(201,168,76);
-    doc.text("Bella & Guy — Staff Performance Report", 14, 18);
-    doc.setFontSize(10); doc.setTextColor(120,120,120);
-    doc.text(`Generated: ${new Date().toLocaleDateString("en-IN")}`, 14, 26);
+    const doc = new jsPDF({ orientation: "landscape" });
+    const W = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString("en-IN", { day:"2-digit", month:"long", year:"numeric" });
+
+    pdfHeader(doc, "Staff Performance Report", dateStr);
+
+    // Stats row
+    const totalStaff = staffPerformance.length;
+    const topEarner = staffPerformance.reduce((a, b) => a.revenue > b.revenue ? a : b, staffPerformance[0] || { name: "—", revenue: 0 });
+    const bw = (W - 28) / 4;
+    pdfStatBox(doc, 14,        48, bw - 3, "Active Staff",   String(totalStaff));
+    pdfStatBox(doc, 14 + bw,   48, bw - 3, "Total Bookings", String(staffPerformance.reduce((s, x) => s + x.total, 0)));
+    pdfStatBox(doc, 14 + bw*2, 48, bw - 3, "Total Revenue",  `Rs.${staffPerformance.reduce((s, x) => s + x.revenue, 0).toLocaleString()}`, true);
+    pdfStatBox(doc, 14 + bw*3, 48, bw - 3, "Top Performer",  topEarner?.name || "—");
+
     autoTable(doc, {
-      startY: 32,
-      head: [["Staff Name", "Role", "Total Bookings", "Completed", "Revenue (₹)", "Avg/Booking", "Top Service"]],
-      body: staffPerformance.map(s => [s.name, s.role, s.total, s.done, `₹${s.revenue.toLocaleString()}`, `₹${s.avg.toLocaleString()}`, s.topService]),
-      headStyles: { fillColor: [20,20,30], textColor: [201,168,76], fontSize: 8 },
-      bodyStyles: { fontSize: 8, textColor: [200,200,200], fillColor: [14,14,22] },
-      alternateRowStyles: { fillColor: [18,18,28] },
+      startY: 70,
+      head: [["Staff Member", "Role", "Total", "Completed", "Cancelled", "Revenue (Rs.)", "Avg / Booking", "Top Service"]],
+      body: staffPerformance.map(s => [
+        s.name, s.role, s.total, s.done,
+        s.total - s.done,
+        `Rs.${s.revenue.toLocaleString()}`,
+        `Rs.${s.avg.toLocaleString()}`,
+        s.topService,
+      ]),
+      headStyles: { fillColor: [30, 25, 10], textColor: [201, 168, 76], fontSize: 9, fontStyle: "bold", cellPadding: 4 },
+      bodyStyles: { fontSize: 9, textColor: [40, 35, 25], cellPadding: 3.5 },
+      alternateRowStyles: { fillColor: [252, 250, 244] },
+      styles: { lineColor: [230, 220, 200], lineWidth: 0.2 },
+      columnStyles: {
+        0: { fontStyle: "bold" },
+        5: { textColor: [34, 150, 80], fontStyle: "bold" },
+      },
+      didDrawPage: () => pdfFooter(doc),
     });
-    doc.save(`staff-report-${today}.pdf`);
+
+    pdfFooter(doc);
+    doc.save(`bella-guy-staff-${today}.pdf`);
+  }
+
+  // ── Backup System ──────────────────────────────────
+  function saveBackupHistory(type: string, bytes: number) {
+    const entry = { date: new Date().toISOString(), type, size: bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB` };
+    const hist = [entry, ...backupHistory].slice(0, 20);
+    setBackupHistory(hist);
+    try { localStorage.setItem("bg_backup_history", JSON.stringify(hist)); } catch {}
+    try { localStorage.setItem("bg_last_backup", new Date().toDateString()); } catch {}
+  }
+
+  function downloadJSON(obj: object, filename: string) {
+    const json = JSON.stringify(obj, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a"); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    return new TextEncoder().encode(json).length;
+  }
+
+  async function backupFull() {
+    setBackingUp(true);
+    const { data: appts } = await supabase.from("appointments").select("*").order("id");
+    const { data: cons  } = await supabase.from("contacts").select("*").order("id");
+    const { data: stf   } = await supabase.from("staff").select("*").order("id");
+    const payload = {
+      metadata: { salon: "Bella & Guy Salon", backup_date: new Date().toISOString(), version: "1.0", type: "full" },
+      tables: { appointments: appts || [], contacts: cons || [], staff: stf || [] },
+      summary: { total_appointments: appts?.length || 0, total_contacts: cons?.length || 0, total_staff: stf?.length || 0 },
+    };
+    const bytes = downloadJSON(payload, `bella-guy-full-backup-${today}.json`);
+    saveBackupHistory("Full Backup", bytes);
+    logActivity("BACKUP_FULL", `Full backup downloaded — ${appts?.length||0} appointments, ${cons?.length||0} contacts, ${stf?.length||0} staff (${(bytes/1024).toFixed(1)} KB)`);
+    setBackingUp(false);
+  }
+
+  async function backupTable(table: "appointments" | "contacts" | "staff", label: string) {
+    setBackingUp(true);
+    const { data } = await supabase.from(table).select("*").order("id");
+    const payload = { metadata: { salon: "Bella & Guy Salon", backup_date: new Date().toISOString(), table, type: label }, data: data || [] };
+    const bytes = downloadJSON(payload, `bella-guy-${table}-${today}.json`);
+    saveBackupHistory(label, bytes);
+    logActivity("BACKUP_TABLE", `${label} downloaded — ${data?.length||0} records (${(bytes/1024).toFixed(1)} KB)`, "table");
+    setBackingUp(false);
+  }
+
+  function toggleAutoBackup(val: boolean) {
+    setAutoBackup(val);
+    try { localStorage.setItem("bg_auto_backup", val ? "1" : "0"); } catch {}
   }
 
   function csvExport() {
-    const h = ["ID","Name","Phone","Service","Date","Time","Address","Status","Staff","Type","Price"];
-    const rows = filteredBookings.map(b => [b.id, b.full_name, b.phone, b.service, b.booking_date, b.booking_time, b.address||"", b.status, b.staff||"", b.address?"Home":"Salon", price(b)]);
-    const csv = [h,...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const h = ["ID", "Client Name", "Phone", "Service", "Date", "Time", "Address", "Status", "Staff", "Type", "Price (Rs.)"];
+    const rows = filteredBookings.map(b => [
+      b.id, b.full_name, b.phone, b.service,
+      b.booking_date, b.booking_time,
+      b.address || "", b.status, b.staff || "",
+      b.address ? "Home Service" : "Salon",
+      price(b) || 0,
+    ]);
+    // UTF-8 BOM so Excel opens Indian characters correctly
+    const BOM = "﻿";
+    const csv = BOM + [h, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    a.download = `bookings-${today}.csv`; a.click();
+    a.href = url; a.download = `bella-guy-bookings-${today}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
-  function sendWA(phone: string, msg: string) { window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank"); }
+  function sendWA(phone: string, msg: string) {
+    let cleaned = phone.replace(/[\s\-\(\)\+]/g, "");
+    if (cleaned.startsWith("91") && cleaned.length > 10) cleaned = cleaned.slice(2);
+    const fullPhone = `91${cleaned}`;
+    const url = msg
+      ? `https://web.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(msg)}`
+      : `https://web.whatsapp.com/send?phone=${fullPhone}`;
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
 
   if (loading) return (
     <div className="ls"><style>{CSS}</style>
@@ -455,6 +805,8 @@ export default function AdminPage() {
     ["revenue",   "📈", "Revenue", 0],
     ["staff",     "👥", "Staff", staffs.length],
     ["contacts",  "💬", "Messages", contacts.length],
+    ["backup",    "🗄", "Backup", 0],
+    ["logs",      "📋", "Activity", activityLogs.length],
   ];
 
   return (
@@ -465,7 +817,7 @@ export default function AdminPage() {
         {/* SIDEBAR */}
         <aside className="sb">
           <div className="sb-logo">
-            <div className="sb-icon">B&G</div>
+            <div className="sb-icon"><img src="/images/logo.png" alt="Bella & Guy" /></div>
             <div><div className="sb-title">Bella & Guy</div><div className="sb-sub">Admin Panel</div></div>
           </div>
           <nav className="sb-nav">
@@ -485,12 +837,12 @@ export default function AdminPage() {
               <button className="sb-btn sb-sec" onClick={pdfRevenue}>💰 Revenue PDF</button>
               <button className="sb-btn sb-sec" onClick={pdfStaff}>👥 Staff PDF</button>
               <button className="sb-btn sb-sec" onClick={csvExport}>⬇ Export CSV</button>
-              <button className="sb-btn sb-red" onClick={async () => { await supabase.auth.signOut(); router.push("/login"); }}>↩ Logout</button>
+              <button className="sb-btn sb-red" onClick={() => showConfirm("Logout", "Are you sure you want to logout from the admin panel?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: "↩️", danger: true })}>↩ Logout</button>
             </div>
           )}
           {!isAdmin && (
             <div className="sb-foot">
-              <button className="sb-btn sb-red" onClick={async () => { await supabase.auth.signOut(); router.push("/login"); }}>↩ Logout</button>
+              <button className="sb-btn sb-red" onClick={() => showConfirm("Logout", "Are you sure you want to logout?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: "↩️", danger: true })}>↩ Logout</button>
             </div>
           )}
         </aside>
@@ -517,6 +869,28 @@ export default function AdminPage() {
 
             {/* ── DASHBOARD TAB ── */}
             {activeTab === "dashboard" && (<>
+
+              {/* Security Alert Banner */}
+              {secEvents.length > 0 && (
+                <div style={{ background:"rgba(245,101,101,0.07)", border:"1px solid rgba(245,101,101,0.25)", borderRadius:14, padding:"14px 18px", marginBottom:18, display:"flex", alignItems:"flex-start", gap:14 }}>
+                  <span style={{ fontSize:22, flexShrink:0 }}>🚨</span>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#f87171", marginBottom:4 }}>Security Alert — Failed Login Attempts Detected</div>
+                    <div style={{ fontSize:12, color:"rgba(248,113,113,0.7)", marginBottom:8 }}>
+                      {secEvents.length} lockout event{secEvents.length > 1 ? "s" : ""} in the last 24 hours. Someone entered wrong passwords repeatedly.
+                    </div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                      {secEvents.slice(0,5).map((e, i) => (
+                        <span key={i} style={{ background:"rgba(245,101,101,0.1)", border:"1px solid rgba(245,101,101,0.2)", borderRadius:6, padding:"3px 9px", fontSize:11, color:"#f87171" }}>
+                          {new Date(e.created_at).toLocaleTimeString("en-IN", { hour:"2-digit", minute:"2-digit" })} · locked {Math.round(e.locked_for_seconds / 60)}min
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={() => setSecEvents([])} style={{ background:"none", border:"none", color:"rgba(248,113,113,0.4)", cursor:"pointer", fontSize:18, flexShrink:0, padding:0 }}>✕</button>
+                </div>
+              )}
+
               <div className="sg">
                 {[
                   { lbl: "Total Bookings",  val: bookings.length,        color: "#c9a84c", sub: "all time" },
@@ -623,8 +997,9 @@ export default function AdminPage() {
                       ? <tr className="empty"><td colSpan={11}>No bookings found</td></tr>
                       : filteredBookings.map((b, i) => {
                           const sc = STATUS_CONFIG[b.status] || STATUS_CONFIG["Pending"];
+                          const isCancelled = b.status === "Cancelled";
                           return (
-                            <tr key={b.id}>
+                            <tr key={b.id} style={isCancelled ? { opacity: 0.45, background: "rgba(245,101,101,0.03)", boxShadow: "inset 3px 0 0 rgba(245,101,101,0.5)" } : {}}>
                               <td style={{ color: "#3a3a3a", fontSize: 11 }}>{i+1}</td>
                               <td><div className="nc"><div className="av">{(b.full_name||"?")[0].toUpperCase()}</div><span style={{ fontWeight:500,color:"#eee" }}>{b.full_name}</span></div></td>
                               <td style={{ fontFamily:"monospace",fontSize:11,color:"#484848" }}>{b.phone}</td>
@@ -635,27 +1010,43 @@ export default function AdminPage() {
                               <td>
                                 <div className="sw">
                                   <span className="sd" style={{ background: sc.dot }} />
-                                  <select value={b.status||"Pending"} onChange={e=>updateStatus(b.id,e.target.value)} className="ss" style={{ background:sc.bg,color:sc.text }}>
+                                  <select value={b.status||"Pending"} onChange={e => {
+                                    const v = e.target.value;
+                                    if (v === "Cancelled") {
+                                      cancelBooking(b);
+                                    } else if (b.status === "Cancelled") {
+                                      showConfirm(
+                                        "Restore Booking",
+                                        `Re-activate ${b.full_name}'s ${b.service} appointment and set status to "${v}"?`,
+                                        async () => { setConfirmModal(null); updateStatus(b.id, v); },
+                                        { confirmLabel: "Yes, Restore", icon: "♻️", danger: false }
+                                      );
+                                    } else {
+                                      updateStatus(b.id, v);
+                                    }
+                                  }} className="ss" style={{ background:sc.bg,color:sc.text }}>
                                     {Object.keys(STATUS_CONFIG).map(s=><option key={s}>{s}</option>)}
                                   </select>
                                 </div>
                               </td>
                               <td>
-                                {isAdmin
-                                  ? <select value={b.staff||""} onChange={e=>assignStaff(b.id,e.target.value)} className="stf">
-                                      <option value="">Assign</option>
-                                      {staffs.length>0 ? staffs.map(s=><option key={s.id} value={s.name}>{s.name}</option>) : ["Sana","Pooja","Riya","Arjun"].map(n=><option key={n}>{n}</option>)}
-                                    </select>
-                                  : <span style={{ fontSize:12,color:"#bbb" }}>{b.staff||"—"}</span>
+                                {isCancelled
+                                  ? <span style={{ fontSize:12,color:"#3a3a3a" }}>{b.staff||"—"}</span>
+                                  : isAdmin
+                                    ? <select value={b.staff||""} onChange={e=>assignStaff(b.id,e.target.value)} className="stf">
+                                        <option value="">Assign</option>
+                                        {staffs.length>0 ? staffs.map(s=><option key={s.id} value={s.name}>{s.name}</option>) : ["Sana","Pooja","Riya","Arjun"].map(n=><option key={n}>{n}</option>)}
+                                      </select>
+                                    : <span style={{ fontSize:12,color:"#bbb" }}>{b.staff||"—"}</span>
                                 }
                               </td>
                               <td style={{ color:"#4fd080",fontWeight:600,fontSize:12 }}>{price(b)?`₹${price(b).toLocaleString()}`:"—"}</td>
                               <td>
                                 <div className="aw">
                                   <button className="btn bv" onClick={()=>setSelectedBooking(b)}>View</button>
-                                  <button className="btn bc" onClick={()=>{updateStatus(b.id,"Confirmed");sendWA(b.phone,`Hello ${b.full_name}, your appointment is confirmed ✅\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nBella & Guy Salon`);}}>✓ Confirm</button>
-                                  <button className="btn bw" onClick={()=>sendWA(b.phone,"")}>WA</button>
-                                  <button className="btn br" onClick={()=>{const nd=prompt("New date (YYYY-MM-DD)");const nt=prompt("New time (HH:MM)");if(!nd||!nt)return;supabase.from("appointments").update({booking_date:nd,booking_time:nt}).eq("id",b.id).then(()=>{fetchBookings(currentStaff);sendWA(b.phone,`Hello ${b.full_name}, your appointment has been rescheduled.\n\nNew Date: ${nd}\nNew Time: ${nt}\n\nBella & Guy Salon`);});}}>📅</button>
+                                  {!isCancelled && <button className="btn bc" onClick={()=>{updateStatus(b.id,"Confirmed");sendWA(b.phone,`Hello ${b.full_name}, your appointment is confirmed ✅\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nBella & Guy Salon`);}}>✓ Confirm</button>}
+                                  {!isCancelled && <button className="btn bw" onClick={()=>sendWA(b.phone,"")}>WA</button>}
+                                  {!isCancelled && <button className="btn br" onClick={()=>{const nd=prompt("New date (YYYY-MM-DD)");const nt=prompt("New time (HH:MM)");if(!nd||!nt)return;supabase.from("appointments").update({booking_date:nd,booking_time:nt}).eq("id",b.id).then(()=>{fetchBookings(currentStaff);sendWA(b.phone,`Hello ${b.full_name}, your appointment has been rescheduled.\n\nNew Date: ${nd}\nNew Time: ${nt}\n\nBella & Guy Salon`);sendEmailNotification("rescheduled",{...b,new_date:nd,new_time:nt});});}}>📅</button>}
                                   {isAdmin && <button className="btn bd" onClick={()=>deleteBooking(b.id)}>✕</button>}
                                 </div>
                               </td>
@@ -839,6 +1230,190 @@ export default function AdminPage() {
               </div>
             )}
 
+            {/* ── BACKUP TAB ── */}
+            {activeTab === "backup" && (<>
+              {/* Status bar */}
+              {(() => {
+                const lastBk = typeof window !== "undefined" ? localStorage.getItem("bg_last_backup") : null;
+                const isToday = lastBk === new Date().toDateString();
+                return (
+                  <div style={{ display:"flex", alignItems:"center", gap:12, background: isToday ? "rgba(79,208,128,0.06)" : "rgba(245,180,50,0.07)", border:`1px solid ${isToday?"rgba(79,208,128,0.2)":"rgba(245,180,50,0.2)"}`, borderRadius:12, padding:"12px 16px", marginBottom:18 }}>
+                    <span style={{ fontSize:20 }}>{isToday ? "✅" : "⚠️"}</span>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:600, color: isToday ? "#4fd080" : "#f5b432" }}>
+                        {isToday ? "All data backed up today" : lastBk ? `Last backup: ${new Date(lastBk).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })} — backup recommended` : "No backup found — back up now"}
+                      </div>
+                      <div style={{ fontSize:11, color:"#383838", marginTop:2 }}>
+                        {bookings.length} appointments · {contacts.length} messages · {staffs.length} staff members
+                      </div>
+                    </div>
+                    <div style={{ marginLeft:"auto", fontSize:11, color:"#2a2a2a" }}>
+                      {autoBackup ? "🔄 Auto ON" : "Auto OFF"}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="bk-grid">
+                {/* Left — Backup actions */}
+                <div>
+                  <div className="bk-card" style={{ marginBottom:16 }}>
+                    <div className="bk-card-title"><span className="bk-status-dot" style={{ background:"#c9a84c" }} /> Database Backup</div>
+
+                    <button className="bk-btn bk-btn-primary" onClick={backupFull} disabled={backingUp}>
+                      <span className="bk-btn-icon">{backingUp ? "⏳" : "🗄️"}</span>
+                      <span className="bk-btn-info">
+                        <span className="bk-btn-label">{backingUp ? "Backing up…" : "Full Backup"}</span>
+                        <span className="bk-btn-sub">All tables — appointments, contacts, staff</span>
+                      </span>
+                    </button>
+
+                    <button className="bk-btn" onClick={() => backupTable("appointments", "Appointments Backup")} disabled={backingUp}>
+                      <span className="bk-btn-icon">📋</span>
+                      <span className="bk-btn-info">
+                        <span className="bk-btn-label">Appointments Only</span>
+                        <span className="bk-btn-sub">{bookings.length} records</span>
+                      </span>
+                    </button>
+
+                    <button className="bk-btn" onClick={() => backupTable("contacts", "Contacts Backup")} disabled={backingUp}>
+                      <span className="bk-btn-icon">💬</span>
+                      <span className="bk-btn-info">
+                        <span className="bk-btn-label">Messages Only</span>
+                        <span className="bk-btn-sub">{contacts.length} messages</span>
+                      </span>
+                    </button>
+
+                    <button className="bk-btn" onClick={() => backupTable("staff", "Staff Backup")} disabled={backingUp}>
+                      <span className="bk-btn-icon">👥</span>
+                      <span className="bk-btn-info">
+                        <span className="bk-btn-label">Staff Data Only</span>
+                        <span className="bk-btn-sub">{staffs.length} staff members</span>
+                      </span>
+                    </button>
+
+                    <div className="bk-toggle">
+                      <span className="bk-toggle-label">🔄 Daily Auto-Backup <span style={{ fontSize:11, color:"#2a2a2a", display:"block" }}>Runs automatically when you open admin panel</span></span>
+                      <label className="bk-switch">
+                        <input type="checkbox" checked={autoBackup} onChange={e => toggleAutoBackup(e.target.checked)} />
+                        <span className="bk-slider" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Media info */}
+                  <div className="bk-card">
+                    <div className="bk-card-title"><span className="bk-status-dot" style={{ background:"#5ab4f5" }} /> Media & Assets</div>
+                    {[
+                      { icon:"🖼️", name:"Team Photos", path:"/images/team/", info:"8 photos" },
+                      { icon:"🏪", name:"Salon Photos", path:"/images/", info:"Interior & front" },
+                      { icon:"🔖", name:"Logo", path:"/images/logo.png", info:"Brand asset" },
+                    ].map(m => (
+                      <div key={m.name} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
+                        <span style={{ fontSize:17 }}>{m.icon}</span>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:"#888" }}>{m.name}</div>
+                          <div style={{ fontSize:11, color:"#333" }}>{m.path} · {m.info}</div>
+                        </div>
+                        <span style={{ fontSize:10, color:"#2a2a2a", background:"rgba(90,180,245,0.07)", border:"1px solid rgba(90,180,245,0.12)", padding:"2px 8px", borderRadius:6, color:"#5ab4f5" }}>Static</span>
+                      </div>
+                    ))}
+                    <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(90,180,245,0.04)", border:"1px solid rgba(90,180,245,0.08)", borderRadius:8, fontSize:11, color:"#383838", lineHeight:1.6 }}>
+                      💡 Static media files are part of your deployment. To backup, download the project folder or use GitHub.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right — Backup history */}
+                <div className="bk-card" style={{ alignSelf:"start" }}>
+                  <div className="bk-card-title" style={{ justifyContent:"space-between" }}>
+                    <span><span className="bk-status-dot" style={{ background:"#4fd080" }} /> Backup History</span>
+                    {backupHistory.length > 0 && (
+                      <button onClick={() => { setBackupHistory([]); try { localStorage.removeItem("bg_backup_history"); } catch {} }} style={{ background:"none", border:"none", color:"#2a2a2a", cursor:"pointer", fontSize:11, fontFamily:"'Inter',sans-serif" }}>Clear</button>
+                    )}
+                  </div>
+                  {backupHistory.length === 0
+                    ? <div className="bk-empty">No backups yet<br /><span style={{ fontSize:11, color:"#222" }}>Click any backup button above</span></div>
+                    : backupHistory.map((h, i) => (
+                        <div key={i} className="bk-hist-row">
+                          <span className="bk-hist-icon">📦</span>
+                          <div className="bk-hist-info">
+                            <div className="bk-hist-type">{h.type}</div>
+                            <div className="bk-hist-date">{new Date(h.date).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}</div>
+                          </div>
+                          <span className="bk-hist-size">{h.size}</span>
+                        </div>
+                      ))
+                  }
+                </div>
+              </div>
+            </>)}
+
+            {/* ── LOGS TAB ── */}
+            {activeTab === "logs" && (<>
+              <div className="log-header">
+                <span className="log-title">📋 Activity Log</span>
+                <span className="log-count">{activityLogs.length} events</span>
+              </div>
+
+              {activityLogs.length === 0 ? (
+                <div className="log-empty">
+                  <div className="log-empty-icon">📋</div>
+                  <div className="log-empty-text">No activity recorded yet</div>
+                  <div className="log-empty-sub">Actions like status changes, deletions, and backups will appear here</div>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="log-table">
+                    <thead>
+                      <tr>
+                        <th>Time</th>
+                        <th>By</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activityLogs.map((log: any, i: number) => {
+                        const action: string = log.action || "";
+                        const badgeClass =
+                          action === "STATUS_CHANGED"   ? "log-badge-status"  :
+                          action === "BOOKING_CANCELLED"? "log-badge-cancel"  :
+                          action === "BOOKING_DELETED"  ? "log-badge-delete"  :
+                          action === "CONTACT_DELETED"  ? "log-badge-delete"  :
+                          action === "STAFF_ASSIGNED"   ? "log-badge-assign"  :
+                          action.startsWith("BACKUP")   ? "log-badge-backup"  :
+                          action === "LOGIN"            ? "log-badge-login"   :
+                          "log-badge-default";
+                        const actionLabel =
+                          action === "STATUS_CHANGED"   ? "Status Changed"   :
+                          action === "BOOKING_CANCELLED"? "Cancelled"        :
+                          action === "BOOKING_DELETED"  ? "Deleted"          :
+                          action === "CONTACT_DELETED"  ? "Msg Deleted"      :
+                          action === "STAFF_ASSIGNED"   ? "Staff Assigned"   :
+                          action === "BACKUP_FULL"      ? "Full Backup"      :
+                          action === "BACKUP_TABLE"     ? "Table Backup"     :
+                          action === "LOGIN"            ? "Login"            :
+                          action.replace(/_/g, " ");
+                        return (
+                          <tr key={i}>
+                            <td className="log-time">
+                              {log.created_at
+                                ? new Date(log.created_at).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
+                                : "—"}
+                            </td>
+                            <td className="log-actor">{log.actor || "System"}</td>
+                            <td><span className={`log-badge ${badgeClass}`}>{actionLabel}</span></td>
+                            <td className="log-detail">{log.details || "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>)}
+
           </div>
         </div>
 
@@ -893,13 +1468,96 @@ export default function AdminPage() {
                 <button className="btn bw" onClick={()=>sendWA(selectedBooking.phone,"")}>💬 WhatsApp</button>
                 <button className="btn bc" onClick={()=>{updateStatus(selectedBooking.id,"Confirmed");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, your appointment is confirmed ✅\nService: ${selectedBooking.service}\n📅 ${selectedBooking.booking_date} at ${selectedBooking.booking_time}\nBella & Guy Salon`);}}>✓ Confirm</button>
                 <button className="btn bg" onClick={()=>sendWA(selectedBooking.phone, `Hello ${selectedBooking.full_name}, thank you for visiting Bella & Guy Salon ❤️\n\nWe'd love your feedback!\n⭐ Leave a review on Google:\nhttps://g.page/r/bella-guy-salon/review\n\nThank you 🙏`)}>⭐ Request Review</button>
-                <button className="btn bx" onClick={()=>{updateStatus(selectedBooking.id,"Cancelled");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, unfortunately we couldn't confirm your appointment.\nService: ${selectedBooking.service} on ${selectedBooking.booking_date}.\nPlease contact us for another slot.\nBella & Guy Salon`);setSelectedBooking(null);}}>Cancel</button>
+                <button className="btn bx" onClick={()=>showConfirm("Cancel Booking",`Mark ${selectedBooking.full_name}'s ${selectedBooking.service} on ${selectedBooking.booking_date} as Cancelled?`,async()=>{setConfirmModal(null);await updateStatus(selectedBooking.id,"Cancelled");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, unfortunately we couldn't confirm your appointment.\nService: ${selectedBooking.service} on ${selectedBooking.booking_date}.\nPlease contact us for another slot.\nBella & Guy Salon`);setSelectedBooking(null);},{confirmLabel:"Yes, Cancel It",icon:"🚫"})}>🚫 Cancel</button>
               </div>
             </div>
           </div>
         )}
 
       </div>
+
+      {/* ── Custom Confirm Modal ── */}
+      {confirmModal && (
+        <>
+          <style>{`
+            .cm-overlay {
+              position: fixed; inset: 0; z-index: 9999;
+              background: rgba(0,0,0,0.6);
+              backdrop-filter: blur(6px);
+              display: flex; align-items: center; justify-content: center;
+              animation: cmFadeIn 0.2s ease;
+            }
+            @keyframes cmFadeIn { from{opacity:0} to{opacity:1} }
+            .cm-box {
+              background: rgba(18,14,10,0.92);
+              backdrop-filter: blur(40px) saturate(180%);
+              border: 1px solid rgba(255,255,255,0.1);
+              border-top: 1px solid rgba(255,255,255,0.18);
+              border-radius: 20px;
+              padding: 32px 28px 24px;
+              width: 100%; max-width: 360px; margin: 16px;
+              box-shadow:
+                inset 0 1.5px 0 rgba(255,255,255,0.12),
+                0 32px 64px rgba(0,0,0,0.6),
+                0 4px 16px rgba(0,0,0,0.3);
+              animation: cmSlideUp 0.25s cubic-bezier(0.22,1,0.36,1);
+            }
+            @keyframes cmSlideUp { from{opacity:0;transform:translateY(16px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+            .cm-icon {
+              width: 44px; height: 44px; border-radius: 12px;
+              background: rgba(245,101,101,0.1); border: 1px solid rgba(245,101,101,0.2);
+              display: flex; align-items: center; justify-content: center;
+              font-size: 18px; margin-bottom: 16px;
+            }
+            .cm-title {
+              font-size: 16px; font-weight: 700; color: #fff;
+              margin-bottom: 8px; font-family: 'Inter', sans-serif;
+            }
+            .cm-msg {
+              font-size: 13px; color: rgba(255,255,255,0.45);
+              line-height: 1.6; margin-bottom: 24px;
+            }
+            .cm-btns { display: flex; gap: 10px; }
+            .cm-cancel {
+              flex: 1; padding: 11px;
+              background: rgba(255,255,255,0.05);
+              border: 1px solid rgba(255,255,255,0.1);
+              border-radius: 10px; color: rgba(255,255,255,0.6);
+              font-size: 13px; font-weight: 600; cursor: pointer;
+              font-family: 'Inter', sans-serif;
+              transition: all 0.2s ease;
+            }
+            .cm-cancel:hover { background: rgba(255,255,255,0.09); color: #fff; }
+            .cm-confirm {
+              flex: 1; padding: 11px;
+              background: rgba(245,101,101,0.15);
+              border: 1px solid rgba(245,101,101,0.3);
+              border-radius: 10px; color: #f87171;
+              font-size: 13px; font-weight: 700; cursor: pointer;
+              font-family: 'Inter', sans-serif;
+              transition: all 0.2s ease;
+            }
+            .cm-confirm:hover { background: rgba(245,101,101,0.25); border-color: rgba(245,101,101,0.5); }
+            .cm-confirm.warn {
+              background: rgba(245,180,50,0.12);
+              border-color: rgba(245,180,50,0.3);
+              color: #f5b432;
+            }
+            .cm-confirm.warn:hover { background: rgba(245,180,50,0.22); border-color: rgba(245,180,50,0.5); }
+          `}</style>
+          <div className="cm-overlay" onClick={() => setConfirmModal(null)}>
+            <div className="cm-box" onClick={e => e.stopPropagation()}>
+              <div className="cm-icon">{confirmModal.icon || "⚠️"}</div>
+              <div className="cm-title">{confirmModal.title}</div>
+              <div className="cm-msg">{confirmModal.message}</div>
+              <div className="cm-btns">
+                <button className="cm-cancel" onClick={() => setConfirmModal(null)}>Keep</button>
+                <button className={`cm-confirm${confirmModal.danger === false ? " warn" : ""}`} onClick={confirmModal.onConfirm}>{confirmModal.confirmLabel || "Confirm"}</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

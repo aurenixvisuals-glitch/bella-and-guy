@@ -9,13 +9,12 @@ export default function Loading() {
           z-index: 9999; gap: 28px;
         }
         .pg-logo-ring {
-          width: 72px; height: 72px; border-radius: 20px;
-          background: linear-gradient(135deg, #c9a84c, #f5d98b);
-          display: flex; align-items: center; justify-content: center;
-          font-family: 'Inter', sans-serif; font-weight: 800; font-size: 20px; color: #1a1000;
+          width: 88px; height: 88px; border-radius: 50%;
+          overflow: hidden; flex-shrink: 0;
           box-shadow: 0 0 0 0 rgba(201,168,76,0.4);
           animation: logoPulse 2s ease-in-out infinite;
         }
+        .pg-logo-ring img { width: 100%; height: 100%; object-fit: cover; display: block; }
         @keyframes logoPulse {
           0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.4), 0 8px 32px rgba(201,168,76,0.3); }
           50%      { box-shadow: 0 0 0 14px rgba(201,168,76,0), 0 8px 48px rgba(201,168,76,0.5); }
@@ -51,7 +50,7 @@ export default function Loading() {
         }
       `}</style>
       <div className="pg-load">
-        <div className="pg-logo-ring">B&G</div>
+        <div className="pg-logo-ring"><img src="/images/logo.png" alt="Bella & Guy" /></div>
         <div className="pg-brand">Bella <em>&</em> Guy</div>
         <div className="pg-bar-wrap"><div className="pg-bar" /></div>
         <div className="pg-sub">Salon Management</div>

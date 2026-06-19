@@ -128,8 +128,7 @@ export default function CustomerLoginPage() {
         .cl-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.15); border-radius: 8px; padding: 48px 40px; width: 100%; max-width: 440px; position: relative; z-index: 1; }
         .cl-back-btn { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-decoration: none; margin-bottom: 32px; transition: all 0.2s; padding: 8px 14px; border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; background: rgba(255,255,255,0.02); }
         .cl-back-btn:hover { color: #C9A84C; border-color: rgba(201,168,76,0.25); background: rgba(201,168,76,0.04); }
-        .cl-logo { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; color: #fff; text-align: center; margin-bottom: 8px; }
-        .cl-logo span { color: #C9A84C; }
+        .cl-logo { width: 72px; height: 72px; border-radius: 50%; overflow: hidden; margin: 0 auto 8px; display: block; }
         .cl-subtitle { text-align: center; font-size: 11px; color: rgba(201,168,76,0.55); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 36px; }
         .cl-tabs { display: flex; border: 1px solid rgba(201,168,76,0.2); border-radius: 4px; margin-bottom: 28px; overflow: hidden; }
         .cl-tab { flex: 1; padding: 12px; background: none; border: none; color: rgba(255,255,255,0.35); font-size: 11.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
@@ -168,7 +167,7 @@ export default function CustomerLoginPage() {
         <div className="cl-card">
           <a href="/" className="cl-back-btn"><BackArrow /> Back to Home</a>
 
-          <div className="cl-logo">Bella <span>&</span> Guy</div>
+          <img src="/images/logo.png" alt="Bella & Guy" className="cl-logo" />
           <div className="cl-subtitle">Member Portal</div>
 
           {/* ── FORGOT PASSWORD ── */}

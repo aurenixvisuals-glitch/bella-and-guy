@@ -160,6 +160,7 @@ export default function StaffPanel() {
   const [loading, setLoading]   = useState(true);
   const [tab, setTab]           = useState<Tab>("today");
   const [toast, setToast]       = useState("");
+  const [showLogout, setShowLogout] = useState(false);
 
   const today    = new Date().toISOString().split("T")[0];
   const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().split("T")[0]; })();
@@ -272,7 +273,7 @@ export default function StaffPanel() {
           <div className="tb-av">{initials}</div>
           <div><div className="tb-name">{me?.name}</div><div className="tb-role">{me?.role} · Staff Panel</div></div>
           <div className="live-pill"><div className="live-dot"/>Live</div>
-          <button className="lo-btn" onClick={async()=>{ await supabase.auth.signOut(); router.push("/login"); }}>Logout</button>
+          <button className="lo-btn" onClick={() => setShowLogout(true)}>Logout</button>
         </div>
 
         <div className="pb">
@@ -529,6 +530,36 @@ export default function StaffPanel() {
         </div>
 
       </div>
+
+      {showLogout && (
+        <>
+          <style>{`
+            .sf-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:sfFade 0.2s ease;}
+            @keyframes sfFade{from{opacity:0}to{opacity:1}}
+            .sf-box{background:rgba(18,14,10,0.92);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.1);border-top:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:32px 28px 24px;width:100%;max-width:340px;margin:16px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.12),0 32px 64px rgba(0,0,0,0.6);animation:sfUp 0.25s cubic-bezier(0.22,1,0.36,1);}
+            @keyframes sfUp{from{opacity:0;transform:translateY(16px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+            .sf-icon{width:44px;height:44px;border-radius:12px;background:rgba(245,101,101,0.1);border:1px solid rgba(245,101,101,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px;}
+            .sf-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;font-family:'Inter',sans-serif;}
+            .sf-msg{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:24px;}
+            .sf-btns{display:flex;gap:10px;}
+            .sf-keep{flex:1;padding:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+            .sf-keep:hover{background:rgba(255,255,255,0.09);color:#fff;}
+            .sf-out{flex:1;padding:11px;background:rgba(245,101,101,0.15);border:1px solid rgba(245,101,101,0.3);border-radius:10px;color:#f87171;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+            .sf-out:hover{background:rgba(245,101,101,0.25);}
+          `}</style>
+          <div className="sf-overlay" onClick={() => setShowLogout(false)}>
+            <div className="sf-box" onClick={e => e.stopPropagation()}>
+              <div className="sf-icon">↩️</div>
+              <div className="sf-title">Logout</div>
+              <div className="sf-msg">Are you sure you want to logout from the Staff Panel?</div>
+              <div className="sf-btns">
+                <button className="sf-keep" onClick={() => setShowLogout(false)}>Stay</button>
+                <button className="sf-out" onClick={async () => { setShowLogout(false); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }}>Logout</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
