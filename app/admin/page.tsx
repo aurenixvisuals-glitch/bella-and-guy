@@ -100,8 +100,9 @@ const CSS = `
 .pb { padding: 24px 28px; }
 
 /* TOAST */
-.toast { display: flex; align-items: center; gap: 10px; background: rgba(79,208,128,0.1); border: 1px solid rgba(79,208,128,0.22); border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px; color: #4fd080; animation: sdn 0.4s cubic-bezier(0.22,1,0.36,1); }
-@keyframes sdn { from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);} }
+.toast { position: fixed; top: 22px; right: 22px; z-index: 99999; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg,rgba(18,24,18,0.97),rgba(10,20,12,0.97)); border: 1.5px solid rgba(79,208,128,0.45); border-radius: 14px; padding: 14px 20px; font-size: 14px; font-weight: 600; color: #4fd080; box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(79,208,128,0.1); animation: toastIn 0.4s cubic-bezier(0.22,1,0.36,1); max-width: 340px; }
+.toast::before { content: "🔔"; font-size: 18px; }
+@keyframes toastIn { from{opacity:0;transform:translateX(60px) scale(0.92);}to{opacity:1;transform:translateX(0) scale(1);} }
 
 /* STATS GRID */
 .sg { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px,1fr)); gap: 10px; margin-bottom: 22px; }
@@ -323,12 +324,35 @@ export default function AdminPage() {
 
   useEffect(() => { init(); }, []);
 
+  function playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const notes = [880, 1100, 880, 1320];
+      let t = ctx.currentTime;
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.35, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        osc.start(t);
+        osc.stop(t + 0.22);
+        t += 0.18;
+      });
+    } catch {}
+  }
+
   useEffect(() => {
     const ch = supabase.channel("appts")
       .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, payload => {
         fetchBookings(currentStaffRef.current);
         if (payload.eventType === "INSERT") {
           const n = payload.new as Booking;
+          playNotificationSound();
           setNotification(`New booking: ${n.full_name} — ${n.service}`);
           if (Notification.permission === "granted")
             new Notification("New Booking", { body: `${n.full_name} booked ${n.service}` });
@@ -942,10 +966,151 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {/* ── TODAY AT A GLANCE ── */}
+              {(() => {
+                const todayBookings = bookings.filter(b => b.booking_date === today);
+                const todayCompleted = todayBookings.filter(b => b.status === "Completed");
+                const todayPending = todayBookings.filter(b => b.status === "Pending" || !b.status);
+                const todayConfirmed = todayBookings.filter(b => b.status === "Confirmed");
+                const todayRevCalc = todayBookings.filter(b => b.status !== "Cancelled").reduce((s,b) => s + price(b), 0);
+                const todayCancelledCnt = todayBookings.filter(b => b.status === "Cancelled").length;
+                const todayAvg = todayCompleted.length ? Math.round(todayCompleted.reduce((s,b)=>s+price(b),0)/todayCompleted.length) : 0;
+
+                // service breakdown for today
+                const todaySvcMap: Record<string,number> = {};
+                todayBookings.filter(b=>b.status!=="Cancelled").forEach(b => {
+                  todaySvcMap[b.service] = (todaySvcMap[b.service]||0) + price(b);
+                });
+                const todaySvcs = Object.entries(todaySvcMap).sort((a,b)=>b[1]-a[1]);
+                const todaySvcMax = todaySvcs[0]?.[1] || 1;
+
+                const now = new Date();
+                const nowMins = now.getHours()*60 + now.getMinutes();
+                const parseMins = (t: string) => {
+                  const [time, ampm] = t.split(" "); const [h,m] = time.split(":").map(Number);
+                  return ((h%12) + (ampm==="PM"?12:0))*60 + (m||0);
+                };
+
+                return (
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ width:3, height:18, borderRadius:99, background:"linear-gradient(180deg,#c9a84c,#f5c75a)" }} />
+                        <span style={{ fontSize:14, fontWeight:700, color:"#fff", letterSpacing:"0.01em" }}>Today at a Glance</span>
+                        <span style={{ fontSize:11, color:"#484848" }}>{new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}</span>
+                      </div>
+                    </div>
+
+                    {/* KPI row */}
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:14 }}>
+                      {[
+                        { lbl:"Revenue",   val:`₹${todayRevCalc.toLocaleString()}`, color:"#c9a84c",  icon:"₹" },
+                        { lbl:"Bookings",  val:todayBookings.length,                color:"#c4a4ff",  icon:"📋" },
+                        { lbl:"Completed", val:todayCompleted.length,               color:"#4fd080",  icon:"✓" },
+                        { lbl:"Pending",   val:todayPending.length,                 color:"#f5c75a",  icon:"⏳" },
+                        { lbl:"Avg Value", val:todayAvg?`₹${todayAvg.toLocaleString()}`:"—", color:"#e879f9", icon:"⌀" },
+                      ].map((k,i) => (
+                        <div key={i} style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:12, padding:"14px 16px" }}>
+                          <div style={{ fontSize:10, color:"#484848", fontWeight:600, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>{k.lbl}</div>
+                          <div style={{ fontSize:22, fontWeight:800, color:k.color, lineHeight:1 }}>{k.val}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display:"grid", gridTemplateColumns:"1.7fr 1fr", gap:12 }}>
+                      {/* Today's bookings table */}
+                      <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:14, overflow:"hidden" }}>
+                        <div style={{ padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center", gap:8 }}>
+                          <CalendarDays size={13} color="#c9a84c"/>
+                          <span style={{ fontSize:13, fontWeight:600, color:"#ddd" }}>Today&rsquo;s Appointments</span>
+                          {todayCancelledCnt > 0 && <span style={{ marginLeft:"auto", fontSize:10, color:"#f56565", background:"rgba(245,101,101,0.1)", padding:"2px 8px", borderRadius:20 }}>{todayCancelledCnt} cancelled</span>}
+                        </div>
+                        {todayBookings.length === 0
+                          ? <div style={{ padding:"24px 16px", color:"#2a2a2a", fontSize:13 }}>No appointments today</div>
+                          : <div style={{ maxHeight:260, overflowY:"auto" }}>
+                              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+                                <thead>
+                                  <tr style={{ background:"rgba(255,255,255,0.03)" }}>
+                                    {["#","Client","Service","Time","Price","Status"].map(h => (
+                                      <th key={h} style={{ padding:"8px 12px", textAlign:"left", color:"#484848", fontWeight:600, fontSize:10, letterSpacing:"0.08em", textTransform:"uppercase", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {todayBookings.sort((a,b) => {
+                                    try { return parseMins(a.booking_time) - parseMins(b.booking_time); } catch { return 0; }
+                                  }).map((b,i) => {
+                                    const sc = STATUS_CONFIG[b.status] || STATUS_CONFIG["Pending"];
+                                    const bMins = (() => { try { return parseMins(b.booking_time); } catch { return -1; } })();
+                                    const isPast = bMins > 0 && bMins < nowMins && b.status !== "Completed";
+                                    return (
+                                      <tr key={b.id} style={{ borderBottom:"1px solid rgba(255,255,255,0.03)", opacity: b.status==="Cancelled"?0.45:1 }}>
+                                        <td style={{ padding:"9px 12px", fontFamily:"monospace", fontSize:10, color:"#c9a84c", fontWeight:700 }}>BG-{String(b.id).padStart(5,"0")}</td>
+                                        <td style={{ padding:"9px 12px", color:"#ccc", maxWidth:100, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{b.full_name}</td>
+                                        <td style={{ padding:"9px 12px", color:"#999", maxWidth:120, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{b.service}</td>
+                                        <td style={{ padding:"9px 12px", color: isPast ? "#f56565" : "#5ab4f5", fontWeight:600, whiteSpace:"nowrap" }}>{b.booking_time}</td>
+                                        <td style={{ padding:"9px 12px", color:"#4fd080", fontWeight:600 }}>{b.status==="Cancelled"?"—":`₹${price(b).toLocaleString()}`}</td>
+                                        <td style={{ padding:"9px 12px" }}>
+                                          <span style={{ background:sc.bg, color:sc.text, padding:"3px 8px", borderRadius:20, fontSize:10, fontWeight:600, whiteSpace:"nowrap" }}>{b.status||"Pending"}</span>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                        }
+                      </div>
+
+                      {/* Today service revenue breakdown */}
+                      <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:14, padding:"12px 16px" }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                          <DollarSign size={13} color="#c9a84c"/>
+                          <span style={{ fontSize:13, fontWeight:600, color:"#ddd" }}>Revenue by Service</span>
+                        </div>
+                        {todaySvcs.length === 0
+                          ? <div style={{ color:"#2a2a2a", fontSize:13 }}>No revenue today</div>
+                          : todaySvcs.map(([svc,rev]) => (
+                              <div key={svc} style={{ marginBottom:12 }}>
+                                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+                                  <span style={{ fontSize:11, color:"#bbb", maxWidth:130, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{svc}</span>
+                                  <span style={{ fontSize:11, color:"#c9a84c", fontWeight:700 }}>₹{rev.toLocaleString()}</span>
+                                </div>
+                                <div style={{ height:4, background:"rgba(255,255,255,0.05)", borderRadius:99 }}>
+                                  <div style={{ height:"100%", width:`${Math.round((rev/todaySvcMax)*100)}%`, background:"linear-gradient(90deg,#c9a84c,#f5c75a)", borderRadius:99 }} />
+                                </div>
+                              </div>
+                            ))
+                        }
+
+                        {/* Confirmed / pending status pills */}
+                        <div style={{ marginTop:16, paddingTop:14, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+                          <div style={{ fontSize:10, color:"#484848", fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:10 }}>Status Breakdown</div>
+                          {[
+                            { lbl:"Confirmed", cnt:todayConfirmed.length, color:"#5ab4f5" },
+                            { lbl:"Pending",   cnt:todayPending.length,   color:"#f5c75a" },
+                            { lbl:"Completed", cnt:todayCompleted.length, color:"#4fd080" },
+                            { lbl:"Cancelled", cnt:todayCancelledCnt,     color:"#f56565" },
+                          ].filter(x=>x.cnt>0).map(x => (
+                            <div key={x.lbl} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:7 }}>
+                              <div style={{ display:"flex", alignItems:"center", gap:7 }}>
+                                <div style={{ width:7, height:7, borderRadius:"50%", background:x.color, flexShrink:0 }} />
+                                <span style={{ fontSize:11, color:"#999" }}>{x.lbl}</span>
+                              </div>
+                              <span style={{ fontSize:12, fontWeight:700, color:x.color }}>{x.cnt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
                 <div className="card">
-                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><Trophy size={13}/>Top Services</div>
-                  {Object.entries(bookings.reduce((a,b) => { a[b.service]=(a[b.service]||0)+1; return a; }, {} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([s,c]) => (
+                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><Trophy size={13}/>Top Services (All Time)</div>
+                  {Object.entries(bookings.reduce((a,b) => { a[b.service]=(a[b.service]||0)+1; return a; }, {} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([s,c]) => (
                     <div key={s} className="rev-row">
                       <span style={{ fontSize: 12, color: "#bbb", flex: 1 }}>{s}</span>
                       <span style={{ fontSize: 11, color: "#484848", background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: 20 }}>{c}×</span>
@@ -953,19 +1118,13 @@ export default function AdminPage() {
                   ))}
                 </div>
                 <div className="card">
-                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><CalendarDays size={13}/>Today's Schedule</div>
-                  {bookings.filter(b=>b.booking_date===today).length === 0
-                    ? <div style={{ color: "#2a2a2a", fontSize: 13 }}>No appointments today</div>
-                    : bookings.filter(b=>b.booking_date===today).map(b => (
-                      <div key={b.id} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                        <div style={{ width:8,height:8,borderRadius:"50%",background:"#c9a84c",marginTop:4,flexShrink:0 }} />
-                        <div>
-                          <div style={{ fontSize:11,color:"#c9a84c",fontWeight:600 }}>{b.booking_time}</div>
-                          <div style={{ fontSize:12,color:"#ccc" }}>{b.full_name} — {b.service}</div>
-                        </div>
-                      </div>
-                    ))
-                  }
+                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><Users size={13}/>Top Customers</div>
+                  {Object.entries(bookings.reduce((a,b) => { a[b.full_name]=(a[b.full_name]||0)+1; return a; }, {} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([name,c]) => (
+                    <div key={name} className="rev-row">
+                      <span style={{ fontSize: 12, color: "#bbb", flex: 1 }}>{name}</span>
+                      <span style={{ fontSize: 11, color: "#484848", background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: 20 }}>{c} visit{c>1?"s":""}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 

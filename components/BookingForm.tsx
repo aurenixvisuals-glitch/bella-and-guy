@@ -83,6 +83,26 @@ export default function BookingForm() {
       }
     });
 
+    // Auto-select Home Service if flag was set before form mounted
+    const checkHomeFlag = () => {
+      const t = sessionStorage.getItem("bookingType");
+      if (t === "home") { setIsHome(true); sessionStorage.removeItem("bookingType"); }
+    };
+    checkHomeFlag();
+
+    // Primary: hashchange fires AFTER browser navigates to #booking — most reliable
+    const onHashChange = () => {
+      if (window.location.hash === "#booking") checkHomeFlag();
+    };
+    window.addEventListener("hashchange", onHashChange);
+
+    // Backup: custom event (for when hash is already #booking)
+    const typeHandler = (e: Event) => {
+      const val = (e as CustomEvent<string>).detail;
+      if (val === "home") setIsHome(true);
+    };
+    window.addEventListener("select-booking-type", typeHandler);
+
     // Preselect from localStorage on mount (in case page was already loaded)
     const stored = localStorage.getItem("preselectService");
     if (stored) { setService(stored); setPreselected(true); localStorage.removeItem("preselectService"); }
@@ -93,7 +113,11 @@ export default function BookingForm() {
       if (value) { setService(value); setPreselected(true); }
     };
     window.addEventListener("preselect-service", handler);
-    return () => window.removeEventListener("preselect-service", handler);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      window.removeEventListener("select-booking-type", typeHandler);
+      window.removeEventListener("preselect-service", handler);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
