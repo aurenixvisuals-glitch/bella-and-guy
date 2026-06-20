@@ -393,7 +393,7 @@ export default function BookingForm() {
         }
       `}</style>
 
-      <section id="booking" className="booking-section">
+      <section className="booking-section">
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
 
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
@@ -408,6 +408,8 @@ export default function BookingForm() {
             <p style={{ color: "#6B6B6B", fontSize: "15px" }}>At-salon or home service — we'll confirm within 30 minutes.</p>
           </div>
 
+          {/* Scroll anchor placed here so #booking lands at the card, not section top */}
+          <div id="booking" style={{ position: "relative", top: "-8px" }} />
           <div className="booking-card">
             <div style={{ display: "flex", gap: "12px", marginBottom: "32px" }}>
               {[false, true].map((val) => (
