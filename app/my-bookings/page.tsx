@@ -97,17 +97,26 @@ export default function MyBookings() {
     setUserPhone(phone);
     setMemberSince(created);
 
-    fetchBookings(phone);
+    fetchBookings(phone, email);
   }
 
-  async function fetchBookings(phone: string) {
-    if (!phone) { setLoading(false); return; }
+  async function fetchBookings(phone: string, email: string) {
+    const filters: string[] = [];
+    if (phone) filters.push(`phone.eq.${phone}`);
+    if (email) filters.push(`email.eq.${email}`);
+    if (filters.length === 0) { setLoading(false); return; }
+
     const { data } = await supabase
       .from("appointments")
       .select("*")
-      .eq("phone", phone)
+      .or(filters.join(","))
       .order("id", { ascending: false });
-    if (data) setBookings(data);
+
+    if (data) {
+      // Deduplicate in case both phone and email match the same row
+      const seen = new Set<number>();
+      setBookings(data.filter(b => { if (seen.has(b.id)) return false; seen.add(b.id); return true; }));
+    }
     setLoading(false);
   }
 
