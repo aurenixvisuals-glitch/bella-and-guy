@@ -24,6 +24,7 @@ import {
 type Tab = "dashboard" | "bookings" | "revenue" | "staff" | "contacts" | "backup" | "logs";
 type ConfirmModal = { title: string; message: string; onConfirm: () => void; confirmLabel?: string; icon?: React.ReactNode; danger?: boolean } | null;
 type FilterType = "all" | "today" | "week" | "month";
+type TypeFilter = "all" | "salon" | "home";
 
 type Booking = {
   id: number; full_name: string; phone: string; email?: string; service: string;
@@ -154,6 +155,9 @@ td { padding: 11px 14px; font-size: 12px; color: #bbb; vertical-align: middle; }
 .fb-btn { padding: 8px 14px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: #444; font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; font-weight: 500; transition: all 0.15s; }
 .fb-btn:hover { background: rgba(255,255,255,0.06); color: #888; }
 .fb-btn.on { background: #c9a84c; color: #0f0f12; border-color: #c9a84c; font-weight: 600; }
+.fb-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.07); flex-shrink: 0; }
+.type-sel { padding: 7px 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: #888; font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+.type-sel.active { border-color: rgba(201,168,76,0.5); color: #c9a84c; background-color: rgba(201,168,76,0.08); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c9a84c'/%3E%3C/svg%3E"); }
 
 /* BACKUP TAB */
 .bk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
@@ -286,6 +290,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [search, setSearch]       = useState("");
   const [filter, setFilter]       = useState<FilterType>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedDate, setSelectedDate]       = useState<Date>(new Date());
   const [notification, setNotification] = useState("");
@@ -524,12 +529,14 @@ export default function AdminPage() {
   // Filter bookings
   const filteredBookings = useMemo(() => bookings.filter(b => {
     const q = search.toLowerCase().trim();
-    // BG number search: "bg-00042", "bg00042", "00042", "42" all match id 42
     const bgRef = `BG-${String(b.id).padStart(5, "0")}`;
     const bgMatch = q.startsWith("bg")
       ? bgRef.toLowerCase().includes(q)
       : /^\d+$/.test(q) && b.id === parseInt(q, 10);
     const m = bgMatch || (b.full_name?.toLowerCase().includes(q) || b.phone?.includes(q) || b.service?.toLowerCase().includes(q));
+    // Type filter: salon = no address, home = has address
+    if (typeFilter === "salon" && b.address) return false;
+    if (typeFilter === "home"  && !b.address) return false;
     if (filter === "today") return m && b.booking_date === today;
     if (filter === "week")  {
       const d = new Date(b.booking_date); const now = new Date();
@@ -538,7 +545,7 @@ export default function AdminPage() {
     }
     if (filter === "month") return m && b.booking_date?.slice(0,7) === thisMonth;
     return m;
-  }), [bookings, search, filter]);
+  }), [bookings, search, filter, typeFilter]);
 
   // Customer history for modal
   const custHistory = selectedBooking ? bookings.filter(b => b.phone === selectedBooking.phone) : [];
@@ -1158,6 +1165,16 @@ export default function AdminPage() {
                     </button>
                   ))}
                 </div>
+                <div className="fb-divider" />
+                <select
+                  className={`type-sel ${typeFilter!=="all"?"active":""}`}
+                  value={typeFilter}
+                  onChange={e => setTypeFilter(e.target.value as TypeFilter)}
+                >
+                  <option value="all">All Types</option>
+                  <option value="salon">🏪 At Salon</option>
+                  <option value="home">🏠 Home Service</option>
+                </select>
                 {isAdmin && <button className="btn bg" onClick={pdfAppointments} style={{display:"inline-flex",alignItems:"center",gap:4}}><Download size={12}/>PDF</button>}
                 {isAdmin && <button className="btn bg" onClick={csvExport} style={{display:"inline-flex",alignItems:"center",gap:4}}><Download size={12}/>CSV</button>}
               </div>
