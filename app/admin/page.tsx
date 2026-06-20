@@ -499,8 +499,13 @@ export default function AdminPage() {
 
   // Filter bookings
   const filteredBookings = useMemo(() => bookings.filter(b => {
-    const q = search.toLowerCase();
-    const m = (b.full_name?.toLowerCase().includes(q) || b.phone?.includes(q) || b.service?.toLowerCase().includes(q));
+    const q = search.toLowerCase().trim();
+    // BG number search: "bg-00042", "bg00042", "00042", "42" all match id 42
+    const bgRef = `BG-${String(b.id).padStart(5, "0")}`;
+    const bgMatch = q.startsWith("bg")
+      ? bgRef.toLowerCase().includes(q)
+      : /^\d+$/.test(q) && b.id === parseInt(q, 10);
+    const m = bgMatch || (b.full_name?.toLowerCase().includes(q) || b.phone?.includes(q) || b.service?.toLowerCase().includes(q));
     if (filter === "today") return m && b.booking_date === today;
     if (filter === "week")  {
       const d = new Date(b.booking_date); const now = new Date();
