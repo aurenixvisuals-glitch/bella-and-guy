@@ -133,7 +133,8 @@ td { padding: 11px 14px; font-size: 12px; color: #bbb; vertical-align: middle; }
 .ss { appearance: none; border: none; outline: none; border-radius: 20px; padding: 5px 10px 5px 22px; font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; }
 .stf { background: rgba(255,255,255,0.04); color: #bbb; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 5px 9px; font-size: 11px; font-family: 'Inter', sans-serif; outline: none; cursor: pointer; }
 .empty td { padding: 44px; text-align: center; color: #2a2a2a; font-size: 13px; }
-.aw { display: flex; gap: 5px; flex-wrap: wrap; }
+.aw { display: flex; flex-direction: column; gap: 4px; min-width: 160px; }
+.aw-row { display: flex; gap: 4px; align-items: center; }
 .btn { border-radius: 8px; padding: 5px 11px; cursor: pointer; font-size: 11px; font-weight: 500; font-family: 'Inter', sans-serif; border: 1px solid; transition: all 0.15s; white-space: nowrap; }
 .btn:hover { opacity: 0.85; transform: translateY(-1px); }
 .bv { background: rgba(90,180,245,0.1); color: #5ab4f5; border-color: rgba(90,180,245,0.2); }
@@ -1192,12 +1193,12 @@ export default function AdminPage() {
                           const isCancelled = b.status === "Cancelled";
                           return (
                             <tr key={b.id} style={isCancelled ? { opacity: 0.45, background: "rgba(245,101,101,0.03)", boxShadow: "inset 3px 0 0 rgba(245,101,101,0.5)" } : {}}>
-                              <td style={{ color: "#c9a84c", fontSize: 10, fontFamily: "monospace", fontWeight: 600 }}>BG-{String(b.id).padStart(5,"0")}</td>
-                              <td><div className="nc"><div className="av">{(b.full_name||"?")[0].toUpperCase()}</div><span style={{ fontWeight:500,color:"#eee" }}>{b.full_name}</span></div></td>
-                              <td style={{ fontFamily:"monospace",fontSize:11,color:"#484848" }}>{b.phone}</td>
+                              <td style={{ color:"#c9a84c",fontSize:10,fontFamily:"monospace",fontWeight:600,whiteSpace:"nowrap" }}>BG-{String(b.id).padStart(5,"0")}</td>
+                              <td style={{ whiteSpace:"nowrap" }}><div className="nc"><div className="av">{(b.full_name||"?")[0].toUpperCase()}</div><span style={{ fontWeight:500,color:"#eee" }}>{b.full_name}</span></div></td>
+                              <td style={{ fontFamily:"monospace",fontSize:11,color:"#484848",whiteSpace:"nowrap" }}>{b.phone}</td>
                               <td style={{ maxWidth:160 }}>{b.service}</td>
-                              <td style={{ color:"#c9a84c",fontFamily:"monospace",fontSize:11 }}>{b.booking_date}</td>
-                              <td style={{ fontFamily:"monospace",fontSize:11 }}>{b.booking_time}</td>
+                              <td style={{ color:"#c9a84c",fontFamily:"monospace",fontSize:11,whiteSpace:"nowrap" }}>{b.booking_date}</td>
+                              <td style={{ fontFamily:"monospace",fontSize:11,whiteSpace:"nowrap" }}>{b.booking_time}</td>
                               <td><span style={{ fontSize:10,padding:"3px 8px",borderRadius:20,background: b.address?"rgba(34,197,94,0.12)":"rgba(90,130,245,0.12)",color: b.address?"#22c55e":"#7ba8ff" }}>{b.address?"Home":"Salon"}</span></td>
                               <td>
                                 <div className="sw">
@@ -1233,13 +1234,17 @@ export default function AdminPage() {
                                 }
                               </td>
                               <td style={{ color:"#4fd080",fontWeight:600,fontSize:12 }}>{price(b)?`₹${price(b).toLocaleString()}`:"—"}</td>
-                              <td>
+                              <td style={{ whiteSpace:"nowrap" }}>
                                 <div className="aw">
-                                  <button className="btn bv" onClick={()=>setSelectedBooking(b)} style={{display:"inline-flex",alignItems:"center",gap:4}}><Eye size={12}/>View</button>
-                                  {!isCancelled && <button className="btn bc" onClick={()=>{updateStatus(b.id,"Confirmed");sendWA(b.phone,`Hello ${b.full_name}, your appointment is confirmed ✅\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nBella & Guy Salon`);}} style={{display:"inline-flex",alignItems:"center",gap:4}}><Check size={12}/>Confirm</button>}
-                                  {!isCancelled && <button className="btn bw" onClick={()=>sendWA(b.phone,"")} style={{display:"inline-flex",alignItems:"center",gap:4}}><MessageCircle size={12}/>WA</button>}
-                                  {!isCancelled && <button className="btn br" title="Reschedule" onClick={()=>{const nd=prompt("New date (YYYY-MM-DD)");const nt=prompt("New time (HH:MM)");if(!nd||!nt)return;supabase.from("appointments").update({booking_date:nd,booking_time:nt}).eq("id",b.id).then(()=>{fetchBookings(currentStaff);sendWA(b.phone,`Hello ${b.full_name}, your appointment has been rescheduled.\n\nNew Date: ${nd}\nNew Time: ${nt}\n\nBella & Guy Salon`);sendEmailNotification("rescheduled",{...b,new_date:nd,new_time:nt});});}} style={{display:"inline-flex",alignItems:"center",justifyContent:"center"}}><CalendarClock size={13}/></button>}
-                                  {isAdmin && <button className="btn bd" title="Delete" onClick={()=>deleteBooking(b.id)} style={{display:"inline-flex",alignItems:"center",justifyContent:"center"}}><Trash2 size={13}/></button>}
+                                  <div className="aw-row">
+                                    <button className="btn bv" onClick={()=>setSelectedBooking(b)} style={{display:"inline-flex",alignItems:"center",gap:4}}><Eye size={12}/>View</button>
+                                    {!isCancelled && <button className="btn bc" onClick={()=>{updateStatus(b.id,"Confirmed");sendWA(b.phone,`Hello ${b.full_name}, your appointment is confirmed ✅\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nBella & Guy Salon`);}} style={{display:"inline-flex",alignItems:"center",gap:4}}><Check size={12}/>Confirm</button>}
+                                    {!isCancelled && <button className="btn bw" onClick={()=>sendWA(b.phone,"")} style={{display:"inline-flex",alignItems:"center",gap:4}}><MessageCircle size={12}/>WA</button>}
+                                  </div>
+                                  <div className="aw-row">
+                                    {!isCancelled && <button className="btn br" title="Reschedule" onClick={()=>{const nd=prompt("New date (YYYY-MM-DD)");const nt=prompt("New time (HH:MM)");if(!nd||!nt)return;supabase.from("appointments").update({booking_date:nd,booking_time:nt}).eq("id",b.id).then(()=>{fetchBookings(currentStaff);sendWA(b.phone,`Hello ${b.full_name}, your appointment has been rescheduled.\n\nNew Date: ${nd}\nNew Time: ${nt}\n\nBella & Guy Salon`);sendEmailNotification("rescheduled",{...b,new_date:nd,new_time:nt});});}} style={{display:"inline-flex",alignItems:"center",gap:4}}><CalendarClock size={12}/>Reschedule</button>}
+                                    {isAdmin && <button className="btn bd" title="Delete" onClick={()=>deleteBooking(b.id)} style={{display:"inline-flex",alignItems:"center",justifyContent:"center"}}><Trash2 size={12}/></button>}
+                                  </div>
                                 </div>
                               </td>
                             </tr>
