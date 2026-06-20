@@ -72,13 +72,11 @@ export default function BookingForm() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [booked, setBooked] = useState<BookingDetails | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [preselected, setPreselected] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        setIsLoggedIn(true);
         const meta = session.user.user_metadata;
         if (meta?.full_name) setFullName(meta.full_name);
         if (meta?.phone) setPhone(meta.phone);
@@ -521,6 +519,17 @@ export default function BookingForm() {
 
             {/* Details */}
             <div className="bc-body">
+              {booked.id && (
+                <div className="bc-row">
+                  <span className="bc-row-icon" style={{ background:"rgba(201,168,76,0.15)" }}>
+                    <span style={{ fontSize:10, fontWeight:800, color:"#C9A84C", fontFamily:"monospace" }}>#</span>
+                  </span>
+                  <span className="bc-row-label">Booking</span>
+                  <span className="bc-row-val" style={{ fontFamily:"monospace", fontWeight:700, color:"#C9A84C", letterSpacing:"0.06em" }}>
+                    BG-{String(booked.id).padStart(5,"0")}
+                  </span>
+                </div>
+              )}
               <div className="bc-row">
                 <span className="bc-row-icon"><User size={13}/></span>
                 <span className="bc-row-label">Name</span>
