@@ -73,6 +73,10 @@ export default function BookingForm() {
   const [showModal, setShowModal] = useState(false);
   const [booked, setBooked] = useState<BookingDetails | null>(null);
   const [preselected, setPreselected] = useState(false);
+  // Honeypot — bots fill this, humans don't see it
+  const [honeypot, setHoneypot] = useState("");
+  // Spam error
+  const [spamError, setSpamError] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -122,12 +126,36 @@ export default function BookingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSpamError("");
+
+    // 1. Honeypot — bot filled the hidden field
+    if (honeypot) return;
+
+    // 2. Phone validation — valid Indian mobile (10 digits, starts with 6-9)
+    const cleaned = phone.replace(/\D/g, "").replace(/^91/, "");
+    if (!/^[6-9]\d{9}$/.test(cleaned)) {
+      setSpamError("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+
+    // 3. Rate limit — same phone cannot book again within 2 hours
+    const twoHrsAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("phone", cleaned)
+      .gte("created_at", twoHrsAgo);
+    if ((count ?? 0) > 0) {
+      setSpamError("A booking from this number was made recently. Please wait 2 hours before booking again.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: inserted, error } = await supabase
         .from("appointments")
         .insert([{
-          full_name: fullName, phone, email: email || null, service,
+          full_name: fullName, phone: cleaned, email: email || null, service,
           booking_date: bookingDate, booking_time: bookingTime,
           is_home_service: isHome, address: isHome ? address : null,
         }])
@@ -486,6 +514,17 @@ export default function BookingForm() {
                     placeholder="Full address for home service..."
                     className="field-input" required={isHome}
                     style={{ height: "90px", resize: "none" }} />
+                </div>
+              )}
+
+              {/* Honeypot — hidden from real users, bots fill it and get silently blocked */}
+              <div style={{ position:"absolute", left:"-9999px", opacity:0, pointerEvents:"none" }} aria-hidden="true">
+                <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} />
+              </div>
+
+              {spamError && (
+                <div style={{ background:"rgba(245,101,101,0.08)", border:"1px solid rgba(245,101,101,0.25)", borderRadius:8, padding:"12px 16px", fontSize:13, color:"#e53e3e", display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ flexShrink:0 }}>⚠️</span> {spamError}
                 </div>
               )}
 
