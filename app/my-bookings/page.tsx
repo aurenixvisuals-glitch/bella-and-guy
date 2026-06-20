@@ -180,8 +180,24 @@ export default function MyBookings() {
     if (!error) setPwdSent(true);
   }
 
-  const upcoming = bookings.filter(b => b.status === "Pending" || b.status === "Confirmed");
-  const past     = bookings.filter(b => b.status === "Completed" || b.status === "Cancelled");
+  // Normalize status: handle null, empty, or lowercase values from DB
+  function normalizeStatus(s: string | null | undefined): string {
+    if (!s) return "Pending";
+    const cap = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    return ["Pending", "Confirmed", "Completed", "Cancelled"].includes(cap) ? cap : "Pending";
+  }
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  // Upcoming = future date AND not done/cancelled
+  const upcoming = bookings.filter(b => {
+    const st = normalizeStatus(b.status);
+    return b.booking_date >= todayStr && st !== "Completed" && st !== "Cancelled";
+  });
+  // Past = past date OR explicitly done/cancelled
+  const past = bookings.filter(b => {
+    const st = normalizeStatus(b.status);
+    return b.booking_date < todayStr || st === "Completed" || st === "Cancelled";
+  });
 
   return (
     <>
@@ -348,7 +364,7 @@ export default function MyBookings() {
                     </div>
                     <div className="mb-stat-card">
                       <div className="mb-stat-label">Completed</div>
-                      <div className="mb-stat-value">{past.filter(b => b.status === "Completed").length}</div>
+                      <div className="mb-stat-value">{past.filter(b => normalizeStatus(b.status) === "Completed").length}</div>
                     </div>
                     <div className="mb-stat-card">
                       <div className="mb-stat-label">Home Services</div>
@@ -360,8 +376,9 @@ export default function MyBookings() {
                     <div style={{ marginBottom: "48px" }}>
                       <div className="mb-section-title">Upcoming Appointments</div>
                       {upcoming.map((b) => {
-                        const d = new Date(b.booking_date);
-                        const s = STATUS_STYLES[b.status] || STATUS_STYLES["Pending"];
+                        const d = new Date(b.booking_date + "T00:00:00");
+                        const st = normalizeStatus(b.status);
+                        const s = STATUS_STYLES[st];
                         return (
                           <div key={b.id} className="mb-booking-card">
                             <div className="mb-booking-date">
@@ -374,7 +391,7 @@ export default function MyBookings() {
                               <div className="mb-booking-meta">{b.booking_time} · {b.booking_date}</div>
                               {b.is_home_service && <span className="mb-home-tag">Home Service</span>}
                             </div>
-                            <span className="mb-status-badge" style={{ background: s.bg, color: s.color }}>{b.status}</span>
+                            <span className="mb-status-badge" style={{ background: s.bg, color: s.color }}>{st}</span>
                           </div>
                         );
                       })}
@@ -385,8 +402,9 @@ export default function MyBookings() {
                     <div style={{ marginBottom: "48px" }}>
                       <div className="mb-section-title">Past Appointments</div>
                       {past.map((b) => {
-                        const d = new Date(b.booking_date);
-                        const s = STATUS_STYLES[b.status] || STATUS_STYLES["Completed"];
+                        const d = new Date(b.booking_date + "T00:00:00");
+                        const st = normalizeStatus(b.status);
+                        const s = STATUS_STYLES[st];
                         return (
                           <div key={b.id} className="mb-booking-card" style={{ opacity: 0.6 }}>
                             <div className="mb-booking-date">
@@ -399,7 +417,7 @@ export default function MyBookings() {
                               <div className="mb-booking-meta">{b.booking_time} · {b.booking_date}</div>
                               {b.is_home_service && <span className="mb-home-tag">Home Service</span>}
                             </div>
-                            <span className="mb-status-badge" style={{ background: s.bg, color: s.color }}>{b.status}</span>
+                            <span className="mb-status-badge" style={{ background: s.bg, color: s.color }}>{st}</span>
                           </div>
                         );
                       })}
