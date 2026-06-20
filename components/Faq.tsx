@@ -280,9 +280,9 @@ export default function Faq() {
 
           <div style={{ textAlign: "center", marginBottom: "64px" }}>
             <span style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
+              display: "block",
               fontSize: "10px", fontWeight: "600", letterSpacing: "0.22em",
-              textTransform: "uppercase", color: "#C9A84C", marginBottom: "16px", display: "block"
+              textTransform: "uppercase", color: "#C9A84C", marginBottom: "16px"
             }}>Common Questions</span>
             <h2 style={{
               fontFamily: "'Cormorant Garamond', serif",

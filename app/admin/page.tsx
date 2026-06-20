@@ -307,7 +307,7 @@ export default function AdminPage() {
   const [activityLogs, setActivityLogs] = useState<{ id: number; created_at: string; actor: string; actor_role: string; action: string; details: string; entity_type?: string }[]>([]);
   const isAdmin = !currentStaff || currentStaff.role === "admin";
 
-  function showConfirm(title: string, message: string, onConfirm: () => void, opts?: { confirmLabel?: string; icon?: string; danger?: boolean }) {
+  function showConfirm(title: string, message: string, onConfirm: () => void, opts?: { confirmLabel?: string; icon?: React.ReactNode; danger?: boolean }) {
     setConfirmModal({ title, message, onConfirm, ...opts });
   }
 
@@ -1512,7 +1512,7 @@ export default function AdminPage() {
                           <div style={{ fontSize:12, fontWeight:600, color:"#888" }}>{m.name}</div>
                           <div style={{ fontSize:11, color:"#333" }}>{m.path} · {m.info}</div>
                         </div>
-                        <span style={{ fontSize:10, color:"#2a2a2a", background:"rgba(90,180,245,0.07)", border:"1px solid rgba(90,180,245,0.12)", padding:"2px 8px", borderRadius:6, color:"#5ab4f5" }}>Static</span>
+                        <span style={{ fontSize:10, background:"rgba(90,180,245,0.07)", border:"1px solid rgba(90,180,245,0.12)", padding:"2px 8px", borderRadius:6, color:"#5ab4f5" }}>Static</span>
                       </div>
                     ))}
                     <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(90,180,245,0.04)", border:"1px solid rgba(90,180,245,0.08)", borderRadius:8, fontSize:11, color:"#383838", lineHeight:1.6 }}>
