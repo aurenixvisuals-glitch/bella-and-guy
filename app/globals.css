@@ -16,7 +16,10 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+html, body { scroll-behavior: smooth; }
+/* Per-element scroll offset — clears the sticky navbar (80px max) on every browser */
+section[id] { scroll-margin-top: 88px; }
+div[id]     { scroll-margin-top: 88px; }
 body {
   background: var(--white);
   color: var(--black);
