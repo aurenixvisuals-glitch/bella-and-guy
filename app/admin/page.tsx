@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
@@ -290,6 +290,8 @@ export default function AdminPage() {
   const [notification, setNotification] = useState("");
   const [loading, setLoading]     = useState(true);
   const [currentStaff, setCurrentStaff] = useState<StaffRow | null>(null);
+  const currentStaffRef = useRef<StaffRow | null>(null);
+  const [showReminderModal, setShowReminderModal] = useState(false);
   const [confirmModal, setConfirmModal] = useState<ConfirmModal>(null);
   const [secEvents, setSecEvents] = useState<{ created_at: string; locked_for_seconds: number }[]>([]);
   const [autoBackup, setAutoBackup] = useState(() => { try { return localStorage.getItem("bg_auto_backup") === "1"; } catch { return false; } });
@@ -324,16 +326,18 @@ export default function AdminPage() {
   useEffect(() => {
     const ch = supabase.channel("appts")
       .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, payload => {
-        fetchBookings();
+        fetchBookings(currentStaffRef.current);
         if (payload.eventType === "INSERT") {
           const n = payload.new as Booking;
-          setNotification(`New: ${n.full_name} — ${n.service}`);
+          setNotification(`New booking: ${n.full_name} — ${n.service}`);
           if (Notification.permission === "granted")
             new Notification("New Booking", { body: `${n.full_name} booked ${n.service}` });
-          setTimeout(() => setNotification(""), 5000);
+          setTimeout(() => setNotification(""), 6000);
         }
       }).subscribe();
-    return () => { supabase.removeChannel(ch); };
+    // Polling fallback every 30s in case realtime replication isn't enabled on the table
+    const poll = setInterval(() => fetchBookings(currentStaffRef.current), 30000);
+    return () => { supabase.removeChannel(ch); clearInterval(poll); };
   }, []);
 
   async function init() {
@@ -345,6 +349,7 @@ export default function AdminPage() {
     // Block customers — only staff table members can access admin panel
     if (!staff) { await supabase.auth.signOut(); router.push("/login"); return; }
     setCurrentStaff(staff);
+    currentStaffRef.current = staff;
     await Promise.all([fetchBookings(staff), fetchContacts(), fetchStaff()]);
     // Try fetch security events (silently skip if table doesn't exist)
     try {
@@ -790,13 +795,12 @@ export default function AdminPage() {
   function sendWA(phone: string, msg: string) {
     let cleaned = phone.replace(/[\s\-\(\)\+]/g, "");
     if (cleaned.startsWith("91") && cleaned.length > 10) cleaned = cleaned.slice(2);
+    if (cleaned.length < 10) return;
     const fullPhone = `91${cleaned}`;
     const url = msg
-      ? `https://web.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(msg)}`
-      : `https://web.whatsapp.com/send?phone=${fullPhone}`;
-    const a = document.createElement("a");
-    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      ? `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/${fullPhone}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   if (loading) return (
@@ -927,9 +931,9 @@ export default function AdminPage() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#f5c75a", marginBottom: 10 }}>
                     <span style={{display:"inline-flex",alignItems:"center",gap:6}}><CalendarDays size={14}/>{tmrBookings.length} appointment{tmrBookings.length>1?"s":""} tomorrow</span>
                   </div>
-                  <button className="btn bw" onClick={() => {
-                    tmrBookings.forEach(b => sendWA(b.phone, `Hello ${b.full_name}, reminder from Bella & Guy Salon ❤️\n\nYour appointment:\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\nService: ${b.service}\n\nSee you soon!`));
-                  }}>Send All Reminders via WhatsApp</button>
+                  <button className="btn bw" onClick={() => setShowReminderModal(true)}>
+                    Send All Reminders via WhatsApp
+                  </button>
                 </div>
               )}
 
@@ -997,7 +1001,7 @@ export default function AdminPage() {
               <div className="tw">
                 <table>
                   <thead><tr>
-                    {["#","Client","Phone","Service","Date","Time","Type","Status","Staff","Price","Actions"].map(h=><th key={h}>{h}</th>)}
+                    {["Booking #","Client","Phone","Service","Date","Time","Type","Status","Staff","Price","Actions"].map(h=><th key={h}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {filteredBookings.length === 0
@@ -1007,7 +1011,7 @@ export default function AdminPage() {
                           const isCancelled = b.status === "Cancelled";
                           return (
                             <tr key={b.id} style={isCancelled ? { opacity: 0.45, background: "rgba(245,101,101,0.03)", boxShadow: "inset 3px 0 0 rgba(245,101,101,0.5)" } : {}}>
-                              <td style={{ color: "#3a3a3a", fontSize: 11 }}>{i+1}</td>
+                              <td style={{ color: "#c9a84c", fontSize: 10, fontFamily: "monospace", fontWeight: 600 }}>BG-{String(b.id).padStart(5,"0")}</td>
                               <td><div className="nc"><div className="av">{(b.full_name||"?")[0].toUpperCase()}</div><span style={{ fontWeight:500,color:"#eee" }}>{b.full_name}</span></div></td>
                               <td style={{ fontFamily:"monospace",fontSize:11,color:"#484848" }}>{b.phone}</td>
                               <td style={{ maxWidth:160 }}>{b.service}</td>
@@ -1564,6 +1568,40 @@ export default function AdminPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* ── WhatsApp Reminder Modal ── */}
+      {showReminderModal && (
+        <div style={{ position:"fixed",inset:0,zIndex:10000,background:"rgba(0,0,0,0.72)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:20 }}
+          onClick={() => setShowReminderModal(false)}>
+          <div style={{ background:"rgba(14,11,7,0.97)",border:"1px solid rgba(201,168,76,0.2)",borderRadius:18,padding:"28px 24px",width:"100%",maxWidth:460,maxHeight:"80vh",overflowY:"auto" }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20 }}>
+              <div style={{ color:"#f5c75a",fontWeight:700,fontSize:15,display:"flex",alignItems:"center",gap:8 }}>
+                <CalendarDays size={16}/> Tomorrow's Reminders ({tmrBookings.length})
+              </div>
+              <button onClick={() => setShowReminderModal(false)} style={{ background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",padding:4 }}><X size={16}/></button>
+            </div>
+            <p style={{ fontSize:12,color:"rgba(255,255,255,0.35)",marginBottom:18 }}>Click each button to send WhatsApp reminder individually</p>
+            <div style={{ display:"flex",flexDirection:"column",gap:10 }}>
+              {tmrBookings.map(b => (
+                <div key={b.id} style={{ background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:10,padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12 }}>
+                  <div>
+                    <div style={{ color:"#eee",fontWeight:600,fontSize:13 }}>{b.full_name}</div>
+                    <div style={{ color:"rgba(201,168,76,0.7)",fontSize:11,marginTop:2 }}>{b.service} · {b.booking_time}</div>
+                  </div>
+                  <button className="btn bw" style={{ flexShrink:0,display:"inline-flex",alignItems:"center",gap:5 }}
+                    onClick={() => sendWA(b.phone, `Hello ${b.full_name}! 👋\n\nThis is a reminder from *Bella & Guy Salon* 💇‍♀️\n\nYour appointment is *tomorrow*:\n📅 ${b.booking_date}\n⏰ ${b.booking_time}\n✂️ ${b.service}\n\nWe look forward to seeing you! Please let us know if you need to reschedule.\n\n— Bella & Guy Team`)}>
+                    <MessageCircle size={12}/> Send WA
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:18,textAlign:"center" }}>
+              <button className="btn bv" onClick={() => setShowReminderModal(false)}>Done</button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

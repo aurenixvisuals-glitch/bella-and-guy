@@ -389,6 +389,7 @@ export default function MyBookings() {
                             <div className="mb-booking-info">
                               <div className="mb-booking-service">{b.service}</div>
                               <div className="mb-booking-meta">{b.booking_time} · {b.booking_date}</div>
+                              <div style={{ fontSize:10, color:"rgba(201,168,76,0.55)", fontFamily:"monospace", fontWeight:600, marginTop:2 }}>BG-{String(b.id).padStart(5,"0")}</div>
                               {b.is_home_service && <span className="mb-home-tag">Home Service</span>}
                             </div>
                             <span className="mb-status-badge" style={{ background: s.bg, color: s.color }}>{st}</span>
@@ -415,6 +416,7 @@ export default function MyBookings() {
                             <div className="mb-booking-info">
                               <div className="mb-booking-service">{b.service}</div>
                               <div className="mb-booking-meta">{b.booking_time} · {b.booking_date}</div>
+                              <div style={{ fontSize:10, color:"rgba(201,168,76,0.4)", fontFamily:"monospace", fontWeight:600, marginTop:2 }}>BG-{String(b.id).padStart(5,"0")}</div>
                               {b.is_home_service && <span className="mb-home-tag">Home Service</span>}
                             </div>
                             <span className="mb-status-badge" style={{ background: s.bg, color: s.color }}>{st}</span>

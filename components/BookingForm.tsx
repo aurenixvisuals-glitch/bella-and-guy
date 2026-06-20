@@ -5,6 +5,7 @@ import { allCategories } from "../lib/servicesData";
 import { Store, Home, X, Calendar, Clock, Phone, Mail, MapPin, User, Sparkles } from "lucide-react";
 
 interface BookingDetails {
+  id?: number;
   fullName: string; phone: string; email: string; service: string;
   bookingDate: string; bookingTime: string; isHome: boolean; address: string;
 }
@@ -101,11 +102,15 @@ export default function BookingForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.from("appointments").insert([{
-        full_name: fullName, phone, email: email || null, service,
-        booking_date: bookingDate, booking_time: bookingTime,
-        is_home_service: isHome, address: isHome ? address : null,
-      }]);
+      const { data: inserted, error } = await supabase
+        .from("appointments")
+        .insert([{
+          full_name: fullName, phone, email: email || null, service,
+          booking_date: bookingDate, booking_time: bookingTime,
+          is_home_service: isHome, address: isHome ? address : null,
+        }])
+        .select("id")
+        .single();
       if (error) throw error;
       // Send email notifications (silently fails if not configured)
       try {
@@ -118,7 +123,7 @@ export default function BookingForm() {
           }),
         });
       } catch {}
-      setBooked({ fullName, phone, email, service, bookingDate, bookingTime, isHome, address });
+      setBooked({ id: inserted?.id, fullName, phone, email, service, bookingDate, bookingTime, isHome, address });
       setShowModal(true);
       playSuccessSound();
       setFullName(""); setPhone(""); setEmail(""); setService("");
@@ -506,6 +511,11 @@ export default function BookingForm() {
               </div>
 
               <h2 className="bc-title">Booking Confirmed!</h2>
+              {booked.id && (
+                <div style={{ display:"inline-block", background:"rgba(201,168,76,0.15)", border:"1px solid rgba(201,168,76,0.3)", borderRadius:20, padding:"3px 14px", fontSize:11, fontWeight:700, letterSpacing:"0.12em", color:"#E8C96D", marginBottom:6, fontFamily:"monospace" }}>
+                  BG-{String(booked.id).padStart(5,"0")}
+                </div>
+              )}
               <p className="bc-subtitle">We&apos;ll confirm via WhatsApp within 30 mins</p>
             </div>
 
