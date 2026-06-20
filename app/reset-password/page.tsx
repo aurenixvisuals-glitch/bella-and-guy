@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -101,7 +102,7 @@ export default function ResetPasswordPage() {
                     style={{ paddingRight: 44 }}
                   />
                   <button type="button" className="rp-eye" onClick={() => setShowPass(!showPass)}>
-                    {showPass ? "🙈" : "👁️"}
+                    {showPass ? <EyeOff size={15}/> : <Eye size={15}/>}
                   </button>
                 </div>
               </div>

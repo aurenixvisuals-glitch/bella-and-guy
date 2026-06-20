@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin as supabase } from "../../lib/supabaseAdmin";
 import { useRouter } from "next/navigation";
+import { Shield, Scissors, Lock, AlertTriangle, Mail, Eye, EyeOff } from "lucide-react";
 
 type LoginType = "admin" | "staff";
 
@@ -285,14 +286,14 @@ export default function LoginPage() {
           <div className="brand-sub">Salon Management</div>
 
           <div className="tabs">
-            <button className={`tab ${loginType==="admin"?"on":""}`} onClick={() => { setLoginType("admin"); setError(""); }} disabled={isLocked}>🛡 Admin</button>
-            <button className={`tab ${loginType==="staff"?"on":""}`} onClick={() => { setLoginType("staff"); setError(""); }} disabled={isLocked}>💇 Staff</button>
+            <button className={`tab ${loginType==="admin"?"on":""}`} onClick={() => { setLoginType("admin"); setError(""); }} disabled={isLocked} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6}}><Shield size={13}/>Admin</button>
+            <button className={`tab ${loginType==="staff"?"on":""}`} onClick={() => { setLoginType("staff"); setError(""); }} disabled={isLocked} style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6}}><Scissors size={13}/>Staff</button>
           </div>
 
           {/* ── Lockout banner ── */}
           {isLocked && (
             <div className="lock-banner">
-              <span className="lock-icon">🔒</span>
+              <span className="lock-icon" style={{display:"flex",justifyContent:"center"}}><Lock size={28} color="#f87171"/></span>
               <div className="lock-title">Access Temporarily Locked</div>
               <div className="lock-sub">Too many failed attempts. Please wait.</div>
               <div className="lock-timer">
@@ -305,7 +306,7 @@ export default function LoginPage() {
           {/* ── Attempts warning (not locked yet) ── */}
           {!isLocked && attLeft < MAX_TRIES && attLeft > 0 && (
             <div className="att-warn">
-              ⚠️ <span><strong>{attLeft} attempt{attLeft === 1 ? "" : "s"}</strong> remaining before {MAX_TRIES === attLeft + 1 ? "1-minute" : ""} lockout</span>
+              <AlertTriangle size={14}/> <span><strong>{attLeft} attempt{attLeft === 1 ? "" : "s"}</strong> remaining before {MAX_TRIES === attLeft + 1 ? "1-minute" : ""} lockout</span>
             </div>
           )}
 
@@ -313,7 +314,7 @@ export default function LoginPage() {
             <>
               {forgotSent ? (
                 <div className="forgot-success">
-                  <div className="forgot-success-icon">📧</div>
+                  <div className="forgot-success-icon" style={{display:"flex",justifyContent:"center"}}><Mail size={28} color="#4fd080"/></div>
                   <div className="forgot-success-title">Reset Link Sent!</div>
                   <div className="forgot-success-sub">Check your email inbox.<br />Click the link to set a new password.</div>
                 </div>
@@ -333,7 +334,7 @@ export default function LoginPage() {
           ) : (
             <>
               <form onSubmit={login}>
-                {error && !isLocked && <div className="err"><span>⚠</span>{error}</div>}
+                {error && !isLocked && <div className="err"><AlertTriangle size={14}/>{error}</div>}
 
                 <label className="flabel">Email Address</label>
                 <div className="fwrap">
@@ -343,12 +344,12 @@ export default function LoginPage() {
                 <label className="flabel">Password</label>
                 <div className="fwrap">
                   <input type={showPass?"text":"password"} className="finput" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" style={{ paddingRight:42 }} disabled={isLocked} />
-                  <button type="button" className="eye" onClick={() => setShowPass(!showPass)} tabIndex={-1} disabled={isLocked}>{showPass?"🙈":"👁"}</button>
+                  <button type="button" className="eye" onClick={() => setShowPass(!showPass)} tabIndex={-1} disabled={isLocked}>{showPass ? <EyeOff size={15}/> : <Eye size={15}/>}</button>
                 </div>
 
                 <button type="submit" className={`sub${isLocked?" locked":""}`} disabled={loading || isLocked}>
                   {isLocked
-                    ? `🔒 Locked — wait ${fmtTime(lockSecs)}`
+                    ? <span style={{display:"inline-flex",alignItems:"center",gap:6}}><Lock size={14}/>Locked — wait {fmtTime(lockSecs)}</span>
                     : loading
                       ? <>{<span className="spin" />}Signing in…</>
                       : loginType==="admin" ? "Sign In as Admin" : "Sign In as Staff"
@@ -362,7 +363,7 @@ export default function LoginPage() {
             </>
           )}
 
-          <div className="fnote">🔐 Protected · Bella & Guy Salon</div>
+          <div className="fnote" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><Shield size={11}/>Protected · Bella & Guy Salon</div>
         </div>
       </div>
     </>

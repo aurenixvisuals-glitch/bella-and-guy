@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -228,7 +229,7 @@ export default function CustomerLoginPage() {
                     <label className="cl-label">Password</label>
                     <div className="cl-pass-wrap">
                       <input className="cl-input" type={showPass ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 44 }} />
-                      <button type="button" className="cl-eye" onClick={() => setShowPass(!showPass)}>{showPass ? "🙈" : "👁️"}</button>
+                      <button type="button" className="cl-eye" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff size={15}/> : <Eye size={15}/>}</button>
                     </div>
                   </div>
                   <button type="button" className="cl-forgot-link" onClick={() => switchMode("forgot")}>
@@ -260,7 +261,7 @@ export default function CustomerLoginPage() {
                     <label className="cl-label">Password</label>
                     <div className="cl-pass-wrap">
                       <input className="cl-input" type={showPass ? "text" : "password"} placeholder="Minimum 6 characters" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingRight: 44 }} />
-                      <button type="button" className="cl-eye" onClick={() => setShowPass(!showPass)}>{showPass ? "🙈" : "👁️"}</button>
+                      <button type="button" className="cl-eye" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff size={15}/> : <Eye size={15}/>}</button>
                     </div>
                   </div>
                   <button className="cl-btn" type="submit" disabled={loading}>

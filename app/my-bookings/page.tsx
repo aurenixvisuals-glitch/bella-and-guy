@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
+import { User, Mail, Phone, Calendar, Lock, Star, PhoneCall, MessageCircle, MapPin, Clock, LogOut, Pencil, X, Check, KeyRound, Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 type Booking = {
   id: number;
@@ -27,7 +28,7 @@ const FAQS = [
   },
   {
     q: "Can I cancel or reschedule my appointment?",
-    a: "Please call or WhatsApp us at +91-XXXXXXXXXX at least 24 hours before your appointment to cancel or reschedule. Last-minute cancellations may not be accommodated.",
+    a: "Please call or WhatsApp us at +91 98765 43210 at least 24 hours before your appointment to cancel or reschedule. Last-minute cancellations may not be accommodated.",
   },
   {
     q: "How does the Home Service work?",
@@ -46,6 +47,12 @@ const FAQS = [
 export default function MyBookings() {
   const router = useRouter();
   const [tab, setTab] = useState<"bookings" | "profile" | "help">("bookings");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "profile") {
+      setTab("profile");
+    }
+  }, []);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
@@ -54,6 +61,20 @@ export default function MyBookings() {
   const [memberSince, setMemberSince] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showLogout, setShowLogout] = useState(false);
+
+  // Edit profile states
+  const [editMode, setEditMode] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [pwdSent, setPwdSent] = useState(false);
+
+  // Security confirm modal
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmPwd, setConfirmPwd] = useState("");
+  const [confirmPwdVisible, setConfirmPwdVisible] = useState(false);
+  const [confirmError, setConfirmError] = useState("");
 
   useEffect(() => {
     checkSession();
@@ -93,6 +114,61 @@ export default function MyBookings() {
   async function doLogout() {
     await supabase.auth.signOut();
     router.push("/");
+  }
+
+  function startEdit() {
+    setEditName(userName);
+    setEditPhone(userPhone);
+    setSaveMsg(null);
+    setEditMode(true);
+  }
+
+  function saveProfile() {
+    // Show password confirmation modal before saving
+    setConfirmPwd("");
+    setConfirmError("");
+    setConfirmPwdVisible(false);
+    setShowConfirm(true);
+  }
+
+  async function doSaveProfile() {
+    if (!confirmPwd.trim()) { setConfirmError("Please enter your password."); return; }
+    setSaving(true);
+    setConfirmError("");
+    // Re-authenticate with current password
+    const { error: authErr } = await supabase.auth.signInWithPassword({
+      email: userEmail,
+      password: confirmPwd,
+    });
+    if (authErr) {
+      setSaving(false);
+      setConfirmError("Incorrect password. Please try again.");
+      return;
+    }
+    // Password verified — now update profile
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: editName.trim(), phone: editPhone.trim() },
+    });
+    setSaving(false);
+    setShowConfirm(false);
+    setConfirmPwd("");
+    if (error) {
+      setSaveMsg({ type: "error", text: error.message });
+    } else {
+      setUserName(editName.trim());
+      setUserPhone(editPhone.trim());
+      setEditMode(false);
+      setSaveMsg({ type: "success", text: "Profile updated successfully!" });
+      setTimeout(() => setSaveMsg(null), 4000);
+    }
+  }
+
+  async function sendPasswordReset() {
+    setPwdSent(false);
+    const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+    if (!error) setPwdSent(true);
   }
 
   const upcoming = bookings.filter(b => b.status === "Pending" || b.status === "Confirmed");
@@ -375,48 +451,107 @@ export default function MyBookings() {
                 </div>
 
                 {/* Account detail fields */}
-                <div className="mb-section-title">Account Information</div>
-                <div className="mb-profile-grid">
-                  <div className="mb-profile-field">
-                    <div className="mb-profile-field-icon">👤</div>
-                    <div className="mb-profile-field-label">Full Name</div>
-                    <div className="mb-profile-field-value">{userName || <span className="muted">Not set</span>}</div>
-                  </div>
-                  <div className="mb-profile-field">
-                    <div className="mb-profile-field-icon">✉️</div>
-                    <div className="mb-profile-field-label">Email Address</div>
-                    <div className="mb-profile-field-value">{userEmail}</div>
-                  </div>
-                  <div className="mb-profile-field">
-                    <div className="mb-profile-field-icon">📱</div>
-                    <div className="mb-profile-field-label">Phone Number</div>
-                    <div className={`mb-profile-field-value ${!userPhone ? "muted" : ""}`}>
-                      {userPhone ? `+91 ${userPhone}` : "Not provided"}
-                    </div>
-                  </div>
-                  <div className="mb-profile-field">
-                    <div className="mb-profile-field-icon">📅</div>
-                    <div className="mb-profile-field-label">Member Since</div>
-                    <div className="mb-profile-field-value">{memberSince || "—"}</div>
-                  </div>
-                  <div className="mb-profile-field">
-                    <div className="mb-profile-field-icon">🔒</div>
-                    <div className="mb-profile-field-label">Account Status</div>
-                    <div className="mb-profile-field-value" style={{ color: "#4ade80" }}>Active & Verified</div>
-                  </div>
-                  <div className="mb-profile-field">
-                    <div className="mb-profile-field-icon">✦</div>
-                    <div className="mb-profile-field-label">Membership</div>
-                    <div className="mb-profile-field-value" style={{ color: "#C9A84C" }}>Regular Member</div>
-                  </div>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18, paddingBottom:14, borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="mb-section-title" style={{ margin:0, padding:0, border:"none" }}>Account Information</div>
+                  {!editMode && (
+                    <button onClick={startEdit} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(201,168,76,0.08)", border:"1px solid rgba(201,168,76,0.25)", color:"#C9A84C", padding:"8px 16px", borderRadius:6, fontSize:12, fontWeight:600, letterSpacing:"0.06em", cursor:"pointer", fontFamily:"'Inter',sans-serif", transition:"all 0.2s" }}>
+                      <Pencil size={12}/>Edit Profile
+                    </button>
+                  )}
                 </div>
 
-                <div className="mb-profile-note">
-                  <span className="mb-profile-note-icon">ℹ️</span>
-                  <span>
-                    To update your name or phone number, please visit the salon or contact us on WhatsApp.
-                    Self-service profile editing is coming soon.
-                  </span>
+                {saveMsg && (
+                  <div style={{ display:"flex", alignItems:"center", gap:10, padding:"12px 16px", borderRadius:8, marginBottom:18, background: saveMsg.type === "success" ? "rgba(39,174,96,0.08)" : "rgba(220,80,80,0.08)", border:`1px solid ${saveMsg.type === "success" ? "rgba(39,174,96,0.25)" : "rgba(220,80,80,0.25)"}`, color: saveMsg.type === "success" ? "#4ade80" : "#f87171", fontSize:13 }}>
+                    {saveMsg.type === "success" ? <Check size={14}/> : <X size={14}/>}
+                    {saveMsg.text}
+                  </div>
+                )}
+
+                {editMode ? (
+                  /* ── EDIT FORM ── */
+                  <div style={{ background:"rgba(201,168,76,0.03)", border:"1px solid rgba(201,168,76,0.15)", borderRadius:10, padding:"28px 24px", marginBottom:24 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+                      <div>
+                        <label style={{ display:"block", fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", marginBottom:8 }}>Full Name</label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={e => setEditName(e.target.value)}
+                          placeholder="Your full name"
+                          style={{ width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:6, padding:"11px 14px", color:"#fff", fontSize:14, fontFamily:"'Inter',sans-serif", outline:"none", boxSizing:"border-box" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display:"block", fontSize:10, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", marginBottom:8 }}>Phone Number</label>
+                        <input
+                          type="tel"
+                          value={editPhone}
+                          onChange={e => setEditPhone(e.target.value)}
+                          placeholder="e.g. 9876543210"
+                          style={{ width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:6, padding:"11px 14px", color:"#fff", fontSize:14, fontFamily:"'Inter',sans-serif", outline:"none", boxSizing:"border-box" }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display:"flex", gap:10 }}>
+                      <button onClick={saveProfile} disabled={saving} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"linear-gradient(135deg,#E8C96D,#C9A84C)", color:"#080808", border:"none", padding:"10px 22px", borderRadius:6, fontSize:12, fontWeight:700, letterSpacing:"0.08em", cursor:"pointer", fontFamily:"'Inter',sans-serif", opacity: saving ? 0.65 : 1 }}>
+                        <Check size={13}/>{saving ? "Saving…" : "Save Changes"}
+                      </button>
+                      <button onClick={() => { setEditMode(false); setSaveMsg(null); }} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.5)", padding:"10px 18px", borderRadius:6, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+                        <X size={13}/>Cancel
+                      </button>
+                    </div>
+                    <p style={{ margin:"14px 0 0", fontSize:11.5, color:"rgba(255,255,255,0.2)" }}>Email address cannot be changed here for security reasons.</p>
+                  </div>
+                ) : (
+                  <div className="mb-profile-grid" style={{ marginBottom:24 }}>
+                    <div className="mb-profile-field">
+                      <div className="mb-profile-field-icon"><User size={14}/></div>
+                      <div className="mb-profile-field-label">Full Name</div>
+                      <div className="mb-profile-field-value">{userName || <span className="muted">Not set</span>}</div>
+                    </div>
+                    <div className="mb-profile-field">
+                      <div className="mb-profile-field-icon"><Mail size={14}/></div>
+                      <div className="mb-profile-field-label">Email Address</div>
+                      <div className="mb-profile-field-value">{userEmail}</div>
+                    </div>
+                    <div className="mb-profile-field">
+                      <div className="mb-profile-field-icon"><Phone size={14}/></div>
+                      <div className="mb-profile-field-label">Phone Number</div>
+                      <div className={`mb-profile-field-value ${!userPhone ? "muted" : ""}`}>
+                        {userPhone ? `+91 ${userPhone}` : "Not provided"}
+                      </div>
+                    </div>
+                    <div className="mb-profile-field">
+                      <div className="mb-profile-field-icon"><Calendar size={14}/></div>
+                      <div className="mb-profile-field-label">Member Since</div>
+                      <div className="mb-profile-field-value">{memberSince || "—"}</div>
+                    </div>
+                    <div className="mb-profile-field">
+                      <div className="mb-profile-field-icon"><Lock size={14}/></div>
+                      <div className="mb-profile-field-label">Account Status</div>
+                      <div className="mb-profile-field-value" style={{ color: "#4ade80" }}>Active & Verified</div>
+                    </div>
+                    <div className="mb-profile-field">
+                      <div className="mb-profile-field-icon"><Star size={14}/></div>
+                      <div className="mb-profile-field-label">Membership</div>
+                      <div className="mb-profile-field-value" style={{ color: "#C9A84C" }}>Regular Member</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Change Password */}
+                <div style={{ background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8, padding:"20px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:14 }}>
+                  <div>
+                    <div style={{ display:"flex", alignItems:"center", gap:7, color:"rgba(255,255,255,0.7)", fontSize:13.5, fontWeight:600, marginBottom:3 }}><KeyRound size={14}/>Change Password</div>
+                    <div style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>A reset link will be sent to {userEmail}</div>
+                  </div>
+                  {pwdSent ? (
+                    <span style={{ display:"inline-flex", alignItems:"center", gap:6, color:"#4ade80", fontSize:12.5, fontWeight:600 }}><Check size={13}/>Link sent — check your email</span>
+                  ) : (
+                    <button onClick={sendPasswordReset} style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.6)", padding:"9px 18px", borderRadius:6, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif", transition:"all 0.2s" }}>
+                      <KeyRound size={12}/>Send Reset Link
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -443,19 +578,19 @@ export default function MyBookings() {
               <div className="mb-contact-card">
                 <div className="mb-contact-title">Still need help?</div>
                 <div className="mb-contact-row">
-                  <div className="mb-contact-icon">📞</div>
-                  <span>Call us: <a href="tel:+91XXXXXXXXXX">+91-XXXXXXXXXX</a></span>
+                  <div className="mb-contact-icon"><PhoneCall size={16}/></div>
+                  <span>Call us: <a href="tel:+919876543210">+91 98765 43210</a></span>
                 </div>
                 <div className="mb-contact-row">
-                  <div className="mb-contact-icon">💬</div>
-                  <span>WhatsApp: <a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noreferrer">Message us</a></span>
+                  <div className="mb-contact-icon"><MessageCircle size={16}/></div>
+                  <span>WhatsApp: <a href="https://wa.me/919876543210?text=Hello%20Bella%20%26%20Guy%20Salon%2C%20I%20need%20help." target="_blank" rel="noreferrer">+91 98765 43210</a></span>
                 </div>
                 <div className="mb-contact-row">
-                  <div className="mb-contact-icon">📍</div>
+                  <div className="mb-contact-icon"><MapPin size={16}/></div>
                   <span>Visit us at our salon — we're happy to assist in person.</span>
                 </div>
                 <div className="mb-contact-row">
-                  <div className="mb-contact-icon">🕐</div>
+                  <div className="mb-contact-icon"><Clock size={16}/></div>
                   <span>Hours: Monday – Saturday, 10:00 AM – 8:00 PM</span>
                 </div>
               </div>
@@ -464,35 +599,84 @@ export default function MyBookings() {
         </div>
       </div>
 
+      {/* Shared modal styles */}
+      <style>{`
+        .mb-ovl{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:mbFd 0.2s ease;}
+        @keyframes mbFd{from{opacity:0}to{opacity:1}}
+        .mb-cm{background:rgba(14,11,7,0.97);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.1);border-top:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:32px 28px 24px;width:100%;max-width:360px;margin:16px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.12),0 32px 64px rgba(0,0,0,0.6);animation:mbUp 0.25s cubic-bezier(0.22,1,0.36,1);}
+        @keyframes mbUp{from{opacity:0;transform:translateY(16px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .mb-ci{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+        .mb-ct{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;font-family:'Inter',sans-serif;}
+        .mb-cx{font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6;margin-bottom:22px;}
+        .mb-cbs{display:flex;gap:10px;}
+        .mb-ck{flex:1;padding:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+        .mb-ck:hover{background:rgba(255,255,255,0.09);color:#fff;}
+        .mb-co{flex:1;padding:11px;background:rgba(245,101,101,0.15);border:1px solid rgba(245,101,101,0.3);border-radius:10px;color:#f87171;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+        .mb-co:hover{background:rgba(245,101,101,0.25);}
+        .mb-cg{flex:1;padding:11px;background:linear-gradient(135deg,rgba(201,168,76,0.18),rgba(201,168,76,0.12));border:1px solid rgba(201,168,76,0.35);border-radius:10px;color:#C9A84C;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
+        .mb-cg:hover{background:linear-gradient(135deg,rgba(201,168,76,0.28),rgba(201,168,76,0.2));}
+        .mb-cg:disabled{opacity:0.5;cursor:not-allowed;}
+        .mb-pwd-wrap{position:relative;margin-bottom:6px;}
+        .mb-pwd-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 40px 11px 14px;color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:border-color 0.2s;}
+        .mb-pwd-input:focus{border-color:rgba(201,168,76,0.5);}
+        .mb-pwd-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);display:flex;align-items:center;}
+        .mb-pwd-eye:hover{color:rgba(255,255,255,0.6);}
+      `}</style>
+
+      {/* Logout modal */}
       {showLogout && (
-        <>
-          <style>{`
-            .mb-ovl{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:mbFd 0.2s ease;}
-            @keyframes mbFd{from{opacity:0}to{opacity:1}}
-            .mb-cm{background:rgba(18,14,10,0.92);backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,0.1);border-top:1px solid rgba(255,255,255,0.18);border-radius:20px;padding:32px 28px 24px;width:100%;max-width:340px;margin:16px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.12),0 32px 64px rgba(0,0,0,0.6);animation:mbUp 0.25s cubic-bezier(0.22,1,0.36,1);}
-            @keyframes mbUp{from{opacity:0;transform:translateY(16px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-            .mb-ci{width:44px;height:44px;border-radius:12px;background:rgba(245,101,101,0.1);border:1px solid rgba(245,101,101,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px;}
-            .mb-ct{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;font-family:'Inter',sans-serif;}
-            .mb-cx{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:24px;}
-            .mb-cbs{display:flex;gap:10px;}
-            .mb-ck{flex:1;padding:11px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
-            .mb-ck:hover{background:rgba(255,255,255,0.09);color:#fff;}
-            .mb-co{flex:1;padding:11px;background:rgba(245,101,101,0.15);border:1px solid rgba(245,101,101,0.3);border-radius:10px;color:#f87171;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;}
-            .mb-co:hover{background:rgba(245,101,101,0.25);}
-          `}</style>
-          <div className="mb-ovl" onClick={() => setShowLogout(false)}>
-            <div className="mb-cm" onClick={e => e.stopPropagation()}>
-              <div className="mb-ci">↩️</div>
-              <div className="mb-ct">Sign Out</div>
-              <div className="mb-cx">Are you sure you want to sign out from your account?</div>
-              <div className="mb-cbs">
-                <button className="mb-ck" onClick={() => setShowLogout(false)}>Stay</button>
-                <button className="mb-co" onClick={doLogout}>Sign Out</button>
-              </div>
+        <div className="mb-ovl" onClick={() => setShowLogout(false)}>
+          <div className="mb-cm" onClick={e => e.stopPropagation()}>
+            <div className="mb-ci" style={{ background:"rgba(245,101,101,0.1)", border:"1px solid rgba(245,101,101,0.2)" }}><LogOut size={22} color="#f87171"/></div>
+            <div className="mb-ct">Sign Out</div>
+            <div className="mb-cx">Are you sure you want to sign out from your account?</div>
+            <div className="mb-cbs">
+              <button className="mb-ck" onClick={() => setShowLogout(false)}>Stay</button>
+              <button className="mb-co" onClick={doLogout}>Sign Out</button>
             </div>
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Security confirm modal */}
+      {showConfirm && (
+        <div className="mb-ovl" onClick={() => { setShowConfirm(false); setConfirmError(""); }}>
+          <div className="mb-cm" onClick={e => e.stopPropagation()}>
+            <div className="mb-ci" style={{ background:"rgba(201,168,76,0.1)", border:"1px solid rgba(201,168,76,0.2)" }}><ShieldCheck size={22} color="#C9A84C"/></div>
+            <div className="mb-ct">Confirm Your Identity</div>
+            <div className="mb-cx">Enter your current password to save these changes.</div>
+
+            <div className="mb-pwd-wrap">
+              <input
+                type={confirmPwdVisible ? "text" : "password"}
+                value={confirmPwd}
+                onChange={e => { setConfirmPwd(e.target.value); setConfirmError(""); }}
+                onKeyDown={e => e.key === "Enter" && doSaveProfile()}
+                placeholder="Current password"
+                className="mb-pwd-input"
+                autoFocus
+              />
+              <button type="button" className="mb-pwd-eye" onClick={() => setConfirmPwdVisible(v => !v)}>
+                {confirmPwdVisible ? <EyeOff size={15}/> : <Eye size={15}/>}
+              </button>
+            </div>
+
+            {confirmError && (
+              <div style={{ display:"flex", alignItems:"center", gap:6, color:"#f87171", fontSize:12, marginBottom:16 }}>
+                <X size={12}/>{confirmError}
+              </div>
+            )}
+
+            <div className="mb-cbs" style={{ marginTop: confirmError ? 0 : 16 }}>
+              <button className="mb-ck" onClick={() => { setShowConfirm(false); setConfirmError(""); }}>Cancel</button>
+              <button className="mb-cg" onClick={doSaveProfile} disabled={saving}>
+                {saving ? "Verifying…" : "Confirm & Save"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
 }
+

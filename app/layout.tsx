@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+import CursorWrapper from "@/components/CursorWrapper";
 import "./globals.css";
 
 const PageTransition = dynamic(() => import("@/components/PageTransition"));
@@ -24,6 +25,7 @@ export default function RootLayout({
         />
       </head>
       <body style={{ overflowX: "hidden" }}>
+        <CursorWrapper />
         <PageTransition />
         {children}
       </body>

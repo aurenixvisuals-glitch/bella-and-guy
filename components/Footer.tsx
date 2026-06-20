@@ -129,6 +129,27 @@ export default function Footer() {
           background: rgba(201,168,76,0.08);
         }
 
+        .footer-book-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 16px;
+          background: linear-gradient(135deg, #E8C96D, #C9A84C);
+          color: #080808;
+          padding: 11px 24px;
+          border-radius: 3px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          text-decoration: none;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .footer-book-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(201,168,76,0.35);
+        }
+
         @media (max-width: 900px) {
           .footer-main {
             grid-template-columns: 1fr 1fr;
@@ -184,18 +205,7 @@ export default function Footer() {
             <span className="footer-contact-item">Wave City, Ghaziabad, UP 201003</span>
             <a href="tel:+919876543210" className="footer-contact-item">+91 98765 43210</a>
             <span className="footer-contact-item">Mon – Sun, 9:00 AM – 8:00 PM</span>
-            <a href="#booking" style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
-              marginTop: "16px",
-              background: "linear-gradient(135deg, #E8C96D, #C9A84C)",
-              color: "#080808", padding: "11px 24px", borderRadius: "3px",
-              fontSize: "11px", fontWeight: "700", letterSpacing: "0.12em",
-              textTransform: "uppercase", textDecoration: "none",
-              transition: "all 0.3s ease"
-            }}
-              onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"}
-              onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.transform = "translateY(0)"}
-            >
+            <a href="#booking" className="footer-book-btn">
               Book Now →
             </a>
           </div>

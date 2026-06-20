@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin as supabase } from "../../lib/supabaseAdmin";
 import { allCategories } from "../../lib/servicesData";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
@@ -12,10 +12,17 @@ import {
 } from "recharts";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import {
+  LayoutDashboard, CalendarDays, TrendingUp, Users, MessageSquare,
+  Database, Activity, LogOut, Check, Trash2, CalendarClock,
+  MessageCircle, Download, Shield, RefreshCw, Ban,
+  Search, Trophy, BarChart2, DollarSign, AlertTriangle, CheckCircle,
+  Info, X, FileText, AlertCircle, Star, Eye
+} from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────
 type Tab = "dashboard" | "bookings" | "revenue" | "staff" | "contacts" | "backup" | "logs";
-type ConfirmModal = { title: string; message: string; onConfirm: () => void; confirmLabel?: string; icon?: string; danger?: boolean } | null;
+type ConfirmModal = { title: string; message: string; onConfirm: () => void; confirmLabel?: string; icon?: React.ReactNode; danger?: boolean } | null;
 type FilterType = "all" | "today" | "week" | "month";
 
 type Booking = {
@@ -158,7 +165,7 @@ td { padding: 11px 14px; font-size: 12px; color: #bbb; vertical-align: middle; }
 .bk-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .bk-btn-primary { background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.08)); border-color: rgba(201,168,76,0.3); color: #c9a84c; }
 .bk-btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.12)); border-color: rgba(201,168,76,0.5); }
-.bk-btn-icon { font-size: 18px; flex-shrink: 0; }
+.bk-btn-icon { font-size: 18px; flex-shrink: 0; display:flex; align-items:center; }
 .bk-btn-info { flex: 1; }
 .bk-btn-label { font-size: 13px; font-weight: 600; display: block; }
 .bk-btn-sub { font-size: 11px; color: #484848; font-weight: 400; margin-top: 2px; display: block; }
@@ -320,7 +327,7 @@ export default function AdminPage() {
         fetchBookings();
         if (payload.eventType === "INSERT") {
           const n = payload.new as Booking;
-          setNotification(`🔔 New: ${n.full_name} — ${n.service}`);
+          setNotification(`New: ${n.full_name} — ${n.service}`);
           if (Notification.permission === "granted")
             new Notification("New Booking", { body: `${n.full_name} booked ${n.service}` });
           setTimeout(() => setNotification(""), 5000);
@@ -407,7 +414,7 @@ export default function AdminPage() {
         sendWA(b.phone, `Hello ${b.full_name}, we regret to inform you that your appointment has been cancelled.\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nWe apologize for the inconvenience. Please contact us to reschedule.\n\n— Bella & Guy Salon`);
         sendEmailNotification("cancelled", b);
       },
-      { confirmLabel: "Yes, Cancel It", icon: "🚫", danger: false }
+      { confirmLabel: "Yes, Cancel It", icon: <Ban size={22}/>, danger: false }
     );
   }
 
@@ -422,7 +429,7 @@ export default function AdminPage() {
         if (b) logActivity("BOOKING_DELETED", `${b.full_name}'s ${b.service} on ${b.booking_date} deleted`, "booking", id);
         fetchBookings(currentStaff);
       },
-      { confirmLabel: "Delete", icon: "🗑️", danger: true }
+      { confirmLabel: "Delete", icon: <Trash2 size={22}/>, danger: true }
     );
   }
 
@@ -799,14 +806,14 @@ export default function AdminPage() {
     </div>
   );
 
-  const NAV: [Tab, string, string, number][] = [
-    ["dashboard", "⬛", "Dashboard", bookings.length],
-    ["bookings",  "📋", "Appointments", bookings.length],
-    ["revenue",   "📈", "Revenue", 0],
-    ["staff",     "👥", "Staff", staffs.length],
-    ["contacts",  "💬", "Messages", contacts.length],
-    ["backup",    "🗄", "Backup", 0],
-    ["logs",      "📋", "Activity", activityLogs.length],
+  const NAV: [Tab, React.ReactNode, string, number][] = [
+    ["dashboard", <LayoutDashboard size={16} />, "Dashboard", bookings.length],
+    ["bookings",  <CalendarDays size={16} />,    "Appointments", bookings.length],
+    ["revenue",   <TrendingUp size={16} />,      "Revenue", 0],
+    ["staff",     <Users size={16} />,           "Staff", staffs.length],
+    ["contacts",  <MessageSquare size={16} />,   "Messages", contacts.length],
+    ["backup",    <Database size={16} />,         "Backup", 0],
+    ["logs",      <Activity size={16} />,         "Activity", activityLogs.length],
   ];
 
   return (
@@ -824,7 +831,7 @@ export default function AdminPage() {
             <div className="nav-label">Navigation</div>
             {NAV.map(([tab, icon, label, count]) => (
               <button key={tab} className={`ni ${activeTab === tab ? "on" : ""}`} onClick={() => setActiveTab(tab)}>
-                <span style={{ fontSize: 15 }}>{icon}</span>
+                <span style={{ display:"flex", alignItems:"center", opacity: activeTab === tab ? 1 : 0.5 }}>{icon}</span>
                 <span style={{ flex: 1 }}>{label}</span>
                 {count > 0 && <span className="ni-badge">{count}</span>}
               </button>
@@ -833,16 +840,16 @@ export default function AdminPage() {
           {isAdmin && (
             <div className="sb-foot">
               <div className="nav-label">Export</div>
-              <button className="sb-btn sb-sec" onClick={pdfAppointments}>📄 Appointments PDF</button>
-              <button className="sb-btn sb-sec" onClick={pdfRevenue}>💰 Revenue PDF</button>
-              <button className="sb-btn sb-sec" onClick={pdfStaff}>👥 Staff PDF</button>
-              <button className="sb-btn sb-sec" onClick={csvExport}>⬇ Export CSV</button>
-              <button className="sb-btn sb-red" onClick={() => showConfirm("Logout", "Are you sure you want to logout from the admin panel?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: "↩️", danger: true })}>↩ Logout</button>
+              <button className="sb-btn sb-sec" onClick={pdfAppointments} style={{display:"inline-flex",alignItems:"center",gap:6}}><CalendarDays size={13}/>Appointments PDF</button>
+              <button className="sb-btn sb-sec" onClick={pdfRevenue} style={{display:"inline-flex",alignItems:"center",gap:6}}><TrendingUp size={13}/>Revenue PDF</button>
+              <button className="sb-btn sb-sec" onClick={pdfStaff} style={{display:"inline-flex",alignItems:"center",gap:6}}><Users size={13}/>Staff PDF</button>
+              <button className="sb-btn sb-sec" onClick={csvExport} style={{display:"inline-flex",alignItems:"center",gap:6}}><Download size={13}/>Export CSV</button>
+              <button className="sb-btn sb-red" style={{display:"inline-flex",alignItems:"center",gap:6}} onClick={() => showConfirm("Logout", "Are you sure you want to logout from the admin panel?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: <LogOut size={22}/>, danger: true })}><LogOut size={13}/>Logout</button>
             </div>
           )}
           {!isAdmin && (
             <div className="sb-foot">
-              <button className="sb-btn sb-red" onClick={() => showConfirm("Logout", "Are you sure you want to logout?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: "↩️", danger: true })}>↩ Logout</button>
+              <button className="sb-btn sb-red" style={{display:"inline-flex",alignItems:"center",gap:6}} onClick={() => showConfirm("Logout", "Are you sure you want to logout?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: <LogOut size={22}/>, danger: true })}><LogOut size={13}/>Logout</button>
             </div>
           )}
         </aside>
@@ -873,7 +880,7 @@ export default function AdminPage() {
               {/* Security Alert Banner */}
               {secEvents.length > 0 && (
                 <div style={{ background:"rgba(245,101,101,0.07)", border:"1px solid rgba(245,101,101,0.25)", borderRadius:14, padding:"14px 18px", marginBottom:18, display:"flex", alignItems:"flex-start", gap:14 }}>
-                  <span style={{ fontSize:22, flexShrink:0 }}>🚨</span>
+                  <span style={{ flexShrink:0, color:"#f87171" }}><AlertCircle size={22}/></span>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:13, fontWeight:700, color:"#f87171", marginBottom:4 }}>Security Alert — Failed Login Attempts Detected</div>
                     <div style={{ fontSize:12, color:"rgba(248,113,113,0.7)", marginBottom:8 }}>
@@ -887,7 +894,7 @@ export default function AdminPage() {
                       ))}
                     </div>
                   </div>
-                  <button onClick={() => setSecEvents([])} style={{ background:"none", border:"none", color:"rgba(248,113,113,0.4)", cursor:"pointer", fontSize:18, flexShrink:0, padding:0 }}>✕</button>
+                  <button onClick={() => setSecEvents([])} style={{ background:"none", border:"none", color:"rgba(248,113,113,0.4)", cursor:"pointer", flexShrink:0, padding:0, display:"flex" }}><X size={18}/></button>
                 </div>
               )}
 
@@ -918,7 +925,7 @@ export default function AdminPage() {
               {tmrBookings.length > 0 && (
                 <div className="tomorrow-box" style={{ marginBottom: 18 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#f5c75a", marginBottom: 10 }}>
-                    📅 {tmrBookings.length} appointment{tmrBookings.length>1?"s":""} tomorrow
+                    <span style={{display:"inline-flex",alignItems:"center",gap:6}}><CalendarDays size={14}/>{tmrBookings.length} appointment{tmrBookings.length>1?"s":""} tomorrow</span>
                   </div>
                   <button className="btn bw" onClick={() => {
                     tmrBookings.forEach(b => sendWA(b.phone, `Hello ${b.full_name}, reminder from Bella & Guy Salon ❤️\n\nYour appointment:\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\nService: ${b.service}\n\nSee you soon!`));
@@ -928,7 +935,7 @@ export default function AdminPage() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
                 <div className="card">
-                  <div className="card-title">🏆 Top Services</div>
+                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><Trophy size={13}/>Top Services</div>
                   {Object.entries(bookings.reduce((a,b) => { a[b.service]=(a[b.service]||0)+1; return a; }, {} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([s,c]) => (
                     <div key={s} className="rev-row">
                       <span style={{ fontSize: 12, color: "#bbb", flex: 1 }}>{s}</span>
@@ -937,7 +944,7 @@ export default function AdminPage() {
                   ))}
                 </div>
                 <div className="card">
-                  <div className="card-title">📅 Today's Schedule</div>
+                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><CalendarDays size={13}/>Today's Schedule</div>
                   {bookings.filter(b=>b.booking_date===today).length === 0
                     ? <div style={{ color: "#2a2a2a", fontSize: 13 }}>No appointments today</div>
                     : bookings.filter(b=>b.booking_date===today).map(b => (
@@ -954,7 +961,7 @@ export default function AdminPage() {
               </div>
 
               <div className="card">
-                <div className="card-title">📈 Revenue — Last 12 Months</div>
+                <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><TrendingUp size={13}/>Revenue — Last 12 Months</div>
                 <div style={{ height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyChart} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
@@ -973,7 +980,7 @@ export default function AdminPage() {
             {activeTab === "bookings" && (<>
               <div className="fb">
                 <div className="si">
-                  <span className="si-ic">🔍</span>
+                  <span className="si-ic" style={{display:"flex",alignItems:"center"}}><Search size={14}/></span>
                   <input placeholder="Search name, phone, service…" value={search} onChange={e=>setSearch(e.target.value)} />
                 </div>
                 <div className="fb-btns">
@@ -983,8 +990,8 @@ export default function AdminPage() {
                     </button>
                   ))}
                 </div>
-                {isAdmin && <button className="btn bg" onClick={pdfAppointments}>📄 PDF</button>}
-                {isAdmin && <button className="btn bg" onClick={csvExport}>⬇ CSV</button>}
+                {isAdmin && <button className="btn bg" onClick={pdfAppointments} style={{display:"inline-flex",alignItems:"center",gap:4}}><Download size={12}/>PDF</button>}
+                {isAdmin && <button className="btn bg" onClick={csvExport} style={{display:"inline-flex",alignItems:"center",gap:4}}><Download size={12}/>CSV</button>}
               </div>
 
               <div className="tw">
@@ -1019,7 +1026,7 @@ export default function AdminPage() {
                                         "Restore Booking",
                                         `Re-activate ${b.full_name}'s ${b.service} appointment and set status to "${v}"?`,
                                         async () => { setConfirmModal(null); updateStatus(b.id, v); },
-                                        { confirmLabel: "Yes, Restore", icon: "♻️", danger: false }
+                                        { confirmLabel: "Yes, Restore", icon: <RefreshCw size={22}/>, danger: false }
                                       );
                                     } else {
                                       updateStatus(b.id, v);
@@ -1043,11 +1050,11 @@ export default function AdminPage() {
                               <td style={{ color:"#4fd080",fontWeight:600,fontSize:12 }}>{price(b)?`₹${price(b).toLocaleString()}`:"—"}</td>
                               <td>
                                 <div className="aw">
-                                  <button className="btn bv" onClick={()=>setSelectedBooking(b)}>View</button>
-                                  {!isCancelled && <button className="btn bc" onClick={()=>{updateStatus(b.id,"Confirmed");sendWA(b.phone,`Hello ${b.full_name}, your appointment is confirmed ✅\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nBella & Guy Salon`);}}>✓ Confirm</button>}
-                                  {!isCancelled && <button className="btn bw" onClick={()=>sendWA(b.phone,"")}>WA</button>}
-                                  {!isCancelled && <button className="btn br" onClick={()=>{const nd=prompt("New date (YYYY-MM-DD)");const nt=prompt("New time (HH:MM)");if(!nd||!nt)return;supabase.from("appointments").update({booking_date:nd,booking_time:nt}).eq("id",b.id).then(()=>{fetchBookings(currentStaff);sendWA(b.phone,`Hello ${b.full_name}, your appointment has been rescheduled.\n\nNew Date: ${nd}\nNew Time: ${nt}\n\nBella & Guy Salon`);sendEmailNotification("rescheduled",{...b,new_date:nd,new_time:nt});});}}>📅</button>}
-                                  {isAdmin && <button className="btn bd" onClick={()=>deleteBooking(b.id)}>✕</button>}
+                                  <button className="btn bv" onClick={()=>setSelectedBooking(b)} style={{display:"inline-flex",alignItems:"center",gap:4}}><Eye size={12}/>View</button>
+                                  {!isCancelled && <button className="btn bc" onClick={()=>{updateStatus(b.id,"Confirmed");sendWA(b.phone,`Hello ${b.full_name}, your appointment is confirmed ✅\n\nService: ${b.service}\n📅 ${b.booking_date} at ⏰ ${b.booking_time}\n\nBella & Guy Salon`);}} style={{display:"inline-flex",alignItems:"center",gap:4}}><Check size={12}/>Confirm</button>}
+                                  {!isCancelled && <button className="btn bw" onClick={()=>sendWA(b.phone,"")} style={{display:"inline-flex",alignItems:"center",gap:4}}><MessageCircle size={12}/>WA</button>}
+                                  {!isCancelled && <button className="btn br" title="Reschedule" onClick={()=>{const nd=prompt("New date (YYYY-MM-DD)");const nt=prompt("New time (HH:MM)");if(!nd||!nt)return;supabase.from("appointments").update({booking_date:nd,booking_time:nt}).eq("id",b.id).then(()=>{fetchBookings(currentStaff);sendWA(b.phone,`Hello ${b.full_name}, your appointment has been rescheduled.\n\nNew Date: ${nd}\nNew Time: ${nt}\n\nBella & Guy Salon`);sendEmailNotification("rescheduled",{...b,new_date:nd,new_time:nt});});}} style={{display:"inline-flex",alignItems:"center",justifyContent:"center"}}><CalendarClock size={13}/></button>}
+                                  {isAdmin && <button className="btn bd" title="Delete" onClick={()=>deleteBooking(b.id)} style={{display:"inline-flex",alignItems:"center",justifyContent:"center"}}><Trash2 size={13}/></button>}
                                 </div>
                               </td>
                             </tr>
@@ -1079,7 +1086,7 @@ export default function AdminPage() {
               </div>
 
               <div className="card">
-                <div className="card-title">📊 Monthly Revenue — Last 12 Months</div>
+                <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><BarChart2 size={13}/>Monthly Revenue — Last 12 Months</div>
                 <div style={{ height: 260 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthlyChart} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
@@ -1098,7 +1105,7 @@ export default function AdminPage() {
 
               <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16 }}>
                 <div className="card">
-                  <div className="card-title">💰 Revenue by Service</div>
+                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><DollarSign size={13}/>Revenue by Service</div>
                   {serviceRevenue.length === 0
                     ? <div style={{ color:"#2a2a2a",fontSize:13 }}>No data yet</div>
                     : serviceRevenue.map(([s, r]) => (
@@ -1112,7 +1119,7 @@ export default function AdminPage() {
                 </div>
 
                 <div className="card">
-                  <div className="card-title">👩 Revenue by Staff</div>
+                  <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><Users size={13}/>Revenue by Staff</div>
                   {staffPerformance.length === 0
                     ? <div style={{ color:"#2a2a2a",fontSize:13 }}>No assigned bookings yet</div>
                     : staffPerformance.sort((a,b)=>b.revenue-a.revenue).map(s => (
@@ -1133,8 +1140,8 @@ export default function AdminPage() {
 
               {isAdmin && (
                 <div style={{ display:"flex",gap:10,flexWrap:"wrap" }}>
-                  <button className="btn bg" onClick={pdfRevenue}>📄 Export Revenue PDF</button>
-                  <button className="btn bg" onClick={csvExport}>⬇ Export CSV</button>
+                  <button className="btn bg" onClick={pdfRevenue} style={{display:"inline-flex",alignItems:"center",gap:6}}><FileText size={13}/>Export Revenue PDF</button>
+                  <button className="btn bg" onClick={csvExport} style={{display:"inline-flex",alignItems:"center",gap:6}}><Download size={13}/>Export CSV</button>
                 </div>
               )}
             </>)}
@@ -1168,7 +1175,7 @@ export default function AdminPage() {
 
               {/* Staff bookings table */}
               <div className="card" style={{ marginTop:4 }}>
-                <div className="card-title">📋 All Staff Assignments</div>
+                <div className="card-title" style={{display:"flex",alignItems:"center",gap:7}}><Users size={14}/>All Staff Assignments</div>
                 <div className="tw">
                   <table>
                     <thead><tr>
@@ -1198,7 +1205,7 @@ export default function AdminPage() {
 
               {isAdmin && (
                 <div style={{ marginTop:14 }}>
-                  <button className="btn bg" onClick={pdfStaff}>📄 Export Staff PDF</button>
+                  <button className="btn bg" onClick={pdfStaff} style={{display:"inline-flex",alignItems:"center",gap:6}}><FileText size={13}/>Export Staff PDF</button>
                 </div>
               )}
             </>)}
@@ -1238,7 +1245,7 @@ export default function AdminPage() {
                 const isToday = lastBk === new Date().toDateString();
                 return (
                   <div style={{ display:"flex", alignItems:"center", gap:12, background: isToday ? "rgba(79,208,128,0.06)" : "rgba(245,180,50,0.07)", border:`1px solid ${isToday?"rgba(79,208,128,0.2)":"rgba(245,180,50,0.2)"}`, borderRadius:12, padding:"12px 16px", marginBottom:18 }}>
-                    <span style={{ fontSize:20 }}>{isToday ? "✅" : "⚠️"}</span>
+                    <span style={{ display:"flex",alignItems:"center" }}>{isToday ? <CheckCircle size={20} color="#4fd080"/> : <AlertTriangle size={20} color="#f5b432"/>}</span>
                     <div>
                       <div style={{ fontSize:13, fontWeight:600, color: isToday ? "#4fd080" : "#f5b432" }}>
                         {isToday ? "All data backed up today" : lastBk ? `Last backup: ${new Date(lastBk).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })} — backup recommended` : "No backup found — back up now"}
@@ -1248,7 +1255,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <div style={{ marginLeft:"auto", fontSize:11, color:"#2a2a2a" }}>
-                      {autoBackup ? "🔄 Auto ON" : "Auto OFF"}
+                      {autoBackup ? <span style={{display:"inline-flex",alignItems:"center",gap:4}}><RefreshCw size={11}/>Auto ON</span> : "Auto OFF"}
                     </div>
                   </div>
                 );
@@ -1261,7 +1268,7 @@ export default function AdminPage() {
                     <div className="bk-card-title"><span className="bk-status-dot" style={{ background:"#c9a84c" }} /> Database Backup</div>
 
                     <button className="bk-btn bk-btn-primary" onClick={backupFull} disabled={backingUp}>
-                      <span className="bk-btn-icon">{backingUp ? "⏳" : "🗄️"}</span>
+                      <span className="bk-btn-icon">{backingUp ? <Database size={18} strokeWidth={1.5} style={{opacity:0.5}}/> : <Database size={18} strokeWidth={1.5}/>}</span>
                       <span className="bk-btn-info">
                         <span className="bk-btn-label">{backingUp ? "Backing up…" : "Full Backup"}</span>
                         <span className="bk-btn-sub">All tables — appointments, contacts, staff</span>
@@ -1269,7 +1276,7 @@ export default function AdminPage() {
                     </button>
 
                     <button className="bk-btn" onClick={() => backupTable("appointments", "Appointments Backup")} disabled={backingUp}>
-                      <span className="bk-btn-icon">📋</span>
+                      <span className="bk-btn-icon"><CalendarDays size={18} strokeWidth={1.5}/></span>
                       <span className="bk-btn-info">
                         <span className="bk-btn-label">Appointments Only</span>
                         <span className="bk-btn-sub">{bookings.length} records</span>
@@ -1277,7 +1284,7 @@ export default function AdminPage() {
                     </button>
 
                     <button className="bk-btn" onClick={() => backupTable("contacts", "Contacts Backup")} disabled={backingUp}>
-                      <span className="bk-btn-icon">💬</span>
+                      <span className="bk-btn-icon"><MessageSquare size={18} strokeWidth={1.5}/></span>
                       <span className="bk-btn-info">
                         <span className="bk-btn-label">Messages Only</span>
                         <span className="bk-btn-sub">{contacts.length} messages</span>
@@ -1285,7 +1292,7 @@ export default function AdminPage() {
                     </button>
 
                     <button className="bk-btn" onClick={() => backupTable("staff", "Staff Backup")} disabled={backingUp}>
-                      <span className="bk-btn-icon">👥</span>
+                      <span className="bk-btn-icon"><Users size={18} strokeWidth={1.5}/></span>
                       <span className="bk-btn-info">
                         <span className="bk-btn-label">Staff Data Only</span>
                         <span className="bk-btn-sub">{staffs.length} staff members</span>
@@ -1293,7 +1300,7 @@ export default function AdminPage() {
                     </button>
 
                     <div className="bk-toggle">
-                      <span className="bk-toggle-label">🔄 Daily Auto-Backup <span style={{ fontSize:11, color:"#2a2a2a", display:"block" }}>Runs automatically when you open admin panel</span></span>
+                      <span className="bk-toggle-label" style={{display:"flex",alignItems:"flex-start",gap:8}}><RefreshCw size={14} style={{marginTop:2,flexShrink:0}}/><span>Daily Auto-Backup <span style={{ fontSize:11, color:"#2a2a2a", display:"block" }}>Runs automatically when you open admin panel</span></span></span>
                       <label className="bk-switch">
                         <input type="checkbox" checked={autoBackup} onChange={e => toggleAutoBackup(e.target.checked)} />
                         <span className="bk-slider" />
@@ -1305,12 +1312,12 @@ export default function AdminPage() {
                   <div className="bk-card">
                     <div className="bk-card-title"><span className="bk-status-dot" style={{ background:"#5ab4f5" }} /> Media & Assets</div>
                     {[
-                      { icon:"🖼️", name:"Team Photos", path:"/images/team/", info:"8 photos" },
-                      { icon:"🏪", name:"Salon Photos", path:"/images/", info:"Interior & front" },
-                      { icon:"🔖", name:"Logo", path:"/images/logo.png", info:"Brand asset" },
+                      { icon:<Users size={17} strokeWidth={1.5}/>, name:"Team Photos", path:"/images/team/", info:"8 photos" },
+                      { icon:<Database size={17} strokeWidth={1.5}/>, name:"Salon Photos", path:"/images/", info:"Interior & front" },
+                      { icon:<Shield size={17} strokeWidth={1.5}/>, name:"Logo", path:"/images/logo.png", info:"Brand asset" },
                     ].map(m => (
                       <div key={m.name} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
-                        <span style={{ fontSize:17 }}>{m.icon}</span>
+                        <span style={{ display:"flex", alignItems:"center", color:"#666" }}>{m.icon}</span>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:12, fontWeight:600, color:"#888" }}>{m.name}</div>
                           <div style={{ fontSize:11, color:"#333" }}>{m.path} · {m.info}</div>
@@ -1319,7 +1326,7 @@ export default function AdminPage() {
                       </div>
                     ))}
                     <div style={{ marginTop:12, padding:"10px 12px", background:"rgba(90,180,245,0.04)", border:"1px solid rgba(90,180,245,0.08)", borderRadius:8, fontSize:11, color:"#383838", lineHeight:1.6 }}>
-                      💡 Static media files are part of your deployment. To backup, download the project folder or use GitHub.
+                      <span style={{display:"inline-flex",alignItems:"center",gap:6,verticalAlign:"middle"}}><Info size={12} color="#5ab4f5"/>Static media files are part of your deployment. To backup, download the project folder or use GitHub.</span>
                     </div>
                   </div>
                 </div>
@@ -1336,7 +1343,7 @@ export default function AdminPage() {
                     ? <div className="bk-empty">No backups yet<br /><span style={{ fontSize:11, color:"#222" }}>Click any backup button above</span></div>
                     : backupHistory.map((h, i) => (
                         <div key={i} className="bk-hist-row">
-                          <span className="bk-hist-icon">📦</span>
+                          <span className="bk-hist-icon" style={{display:"flex",alignItems:"center"}}><Database size={15} strokeWidth={1.5}/></span>
                           <div className="bk-hist-info">
                             <div className="bk-hist-type">{h.type}</div>
                             <div className="bk-hist-date">{new Date(h.date).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}</div>
@@ -1352,13 +1359,13 @@ export default function AdminPage() {
             {/* ── LOGS TAB ── */}
             {activeTab === "logs" && (<>
               <div className="log-header">
-                <span className="log-title">📋 Activity Log</span>
+                <span className="log-title" style={{display:"inline-flex",alignItems:"center",gap:6}}><Activity size={14}/>Activity Log</span>
                 <span className="log-count">{activityLogs.length} events</span>
               </div>
 
               {activityLogs.length === 0 ? (
                 <div className="log-empty">
-                  <div className="log-empty-icon">📋</div>
+                  <div className="log-empty-icon" style={{display:"flex",justifyContent:"center"}}><Activity size={28} color="#333"/></div>
                   <div className="log-empty-text">No activity recorded yet</div>
                   <div className="log-empty-sub">Actions like status changes, deletions, and backups will appear here</div>
                 </div>
@@ -1421,8 +1428,8 @@ export default function AdminPage() {
         {selectedBooking && (
           <div className="mb" onClick={()=>setSelectedBooking(null)}>
             <div className="mbox" onClick={e=>e.stopPropagation()}>
-              <div className="mt">📋 Appointment #{selectedBooking.id}
-                <button onClick={()=>setSelectedBooking(null)} style={{ marginLeft:"auto",background:"none",border:"none",color:"#484848",cursor:"pointer",fontSize:18 }}>✕</button>
+              <div className="mt" style={{display:"flex",alignItems:"center",gap:7}}><CalendarDays size={15}/>Appointment #{selectedBooking.id}
+                <button onClick={()=>setSelectedBooking(null)} style={{ marginLeft:"auto",background:"none",border:"none",color:"#484848",cursor:"pointer",display:"flex",alignItems:"center" }}><X size={18}/></button>
               </div>
 
               {[
@@ -1465,10 +1472,10 @@ export default function AdminPage() {
               </div>
 
               <div className="ma">
-                <button className="btn bw" onClick={()=>sendWA(selectedBooking.phone,"")}>💬 WhatsApp</button>
-                <button className="btn bc" onClick={()=>{updateStatus(selectedBooking.id,"Confirmed");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, your appointment is confirmed ✅\nService: ${selectedBooking.service}\n📅 ${selectedBooking.booking_date} at ${selectedBooking.booking_time}\nBella & Guy Salon`);}}>✓ Confirm</button>
-                <button className="btn bg" onClick={()=>sendWA(selectedBooking.phone, `Hello ${selectedBooking.full_name}, thank you for visiting Bella & Guy Salon ❤️\n\nWe'd love your feedback!\n⭐ Leave a review on Google:\nhttps://g.page/r/bella-guy-salon/review\n\nThank you 🙏`)}>⭐ Request Review</button>
-                <button className="btn bx" onClick={()=>showConfirm("Cancel Booking",`Mark ${selectedBooking.full_name}'s ${selectedBooking.service} on ${selectedBooking.booking_date} as Cancelled?`,async()=>{setConfirmModal(null);await updateStatus(selectedBooking.id,"Cancelled");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, unfortunately we couldn't confirm your appointment.\nService: ${selectedBooking.service} on ${selectedBooking.booking_date}.\nPlease contact us for another slot.\nBella & Guy Salon`);setSelectedBooking(null);},{confirmLabel:"Yes, Cancel It",icon:"🚫"})}>🚫 Cancel</button>
+                <button className="btn bw" onClick={()=>sendWA(selectedBooking.phone,"")} style={{display:"inline-flex",alignItems:"center",gap:5}}><MessageCircle size={13}/>WhatsApp</button>
+                <button className="btn bc" onClick={()=>{updateStatus(selectedBooking.id,"Confirmed");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, your appointment is confirmed ✅\nService: ${selectedBooking.service}\n📅 ${selectedBooking.booking_date} at ${selectedBooking.booking_time}\nBella & Guy Salon`);}} style={{display:"inline-flex",alignItems:"center",gap:5}}><Check size={13}/>Confirm</button>
+                <button className="btn bg" onClick={()=>sendWA(selectedBooking.phone, `Hello ${selectedBooking.full_name}, thank you for visiting Bella & Guy Salon!\n\nWe'd love your feedback!\nLeave a review on Google:\nhttps://g.page/r/bella-guy-salon/review\n\nThank you!\nBella & Guy Salon`)} style={{display:"inline-flex",alignItems:"center",gap:5}}><Star size={13}/>Request Review</button>
+                <button className="btn bx" onClick={()=>showConfirm("Cancel Booking",`Mark ${selectedBooking.full_name}'s ${selectedBooking.service} on ${selectedBooking.booking_date} as Cancelled?`,async()=>{setConfirmModal(null);await updateStatus(selectedBooking.id,"Cancelled");sendWA(selectedBooking.phone,`Hello ${selectedBooking.full_name}, unfortunately we couldn't confirm your appointment.\nService: ${selectedBooking.service} on ${selectedBooking.booking_date}.\nPlease contact us for another slot.\nBella & Guy Salon`);setSelectedBooking(null);},{confirmLabel:"Yes, Cancel It",icon:<Ban size={22}/>})} style={{display:"inline-flex",alignItems:"center",gap:5}}><Ban size={13}/>Cancel</button>
               </div>
             </div>
           </div>
@@ -1547,7 +1554,7 @@ export default function AdminPage() {
           `}</style>
           <div className="cm-overlay" onClick={() => setConfirmModal(null)}>
             <div className="cm-box" onClick={e => e.stopPropagation()}>
-              <div className="cm-icon">{confirmModal.icon || "⚠️"}</div>
+              <div className="cm-icon">{confirmModal.icon || <AlertTriangle size={22}/>}</div>
               <div className="cm-title">{confirmModal.title}</div>
               <div className="cm-msg">{confirmModal.message}</div>
               <div className="cm-btns">

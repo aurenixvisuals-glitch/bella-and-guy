@@ -62,11 +62,15 @@ export default function Hero() {
     const t1 = setTimeout(() => setTextVisible(true), 120);
     const t2 = setTimeout(() => setStatsVisible(true), 800);
 
-    // Subtle parallax on scroll
+    // RAF-throttled parallax
+    let ticking = false;
     const onScroll = () => {
-      if (!bgRef.current) return;
-      const y = window.scrollY;
-      bgRef.current.style.transform = `translateY(${y * 0.28}px)`;
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        if (bgRef.current) bgRef.current.style.transform = `translate3d(0,${window.scrollY * 0.28}px,0)`;
+        ticking = false;
+      });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => { clearTimeout(t1); clearTimeout(t2); window.removeEventListener("scroll", onScroll); };

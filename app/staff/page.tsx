@@ -1,9 +1,11 @@
 "use client";
 
+import React from "react";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin as supabase } from "../../lib/supabaseAdmin";
 import { allCategories } from "../../lib/servicesData";
+import { CalendarDays, Calendar, TrendingUp, User, LogOut, Check, Phone, MapPin, Home, Info } from "lucide-react";
 
 type Booking = {
   id: number; full_name: string; phone: string; service: string;
@@ -307,11 +309,11 @@ export default function StaffPanel() {
             {/* Today timeline */}
             <div className="tl-wrap">
               <div className="tl-head">
-                <span className="tl-title">📅 Today's Bookings</span>
+                <span className="tl-title">Today's Bookings</span>
                 <span className="tl-count">{todayList.length} total</span>
               </div>
               {todayList.length === 0
-                ? <div className="empty"><div className="empty-ic">☀️</div><div style={{ fontSize:13,color:"#383838" }}>No appointments today</div></div>
+                ? <div className="empty"><div className="empty-ic"><CalendarDays size={28} strokeWidth={1.5} /></div><div style={{ fontSize:13,color:"#383838" }}>No appointments today</div></div>
                 : todayList.map(b => {
                     const sc = STATUS[b.status] || STATUS["Pending"];
                     const p = price(b);
@@ -324,15 +326,15 @@ export default function StaffPanel() {
                           <div className="tl-svc">{b.service}</div>
                           <div className="tl-tags">
                             <span className="tag" style={{ background:sc.bg,color:sc.color }}>{b.status}</span>
-                            {b.address && <span className="tag tag-home">🏠 Home</span>}
+                            {b.address && <span className="tag tag-home"><Home size={10}/> Home</span>}
                             {p > 0 && <span className="tag tag-price">₹{p.toLocaleString()}</span>}
-                            <span style={{ fontSize:10,color:"#484848" }}>📞 {b.phone}</span>
+                            <span style={{ fontSize:10,color:"#484848",display:"inline-flex",alignItems:"center",gap:3 }}><Phone size={10}/> {b.phone}</span>
                           </div>
-                          {b.address && <div style={{ fontSize:11,color:"#585858",marginTop:6,padding:"6px 10px",background:"rgba(255,255,255,0.02)",borderRadius:7 }}>📍 {b.address}</div>}
+                          {b.address && <div style={{ fontSize:11,color:"#585858",marginTop:6,padding:"6px 10px",background:"rgba(255,255,255,0.02)",borderRadius:7,display:"flex",alignItems:"center",gap:4 }}><MapPin size={11}/> {b.address}</div>}
                         </div>
                         {(b.status === "Pending" || b.status === "Confirmed") && (
                           <div className="tl-actions">
-                            <button className="btn b-done" onClick={()=>updateStatus(b.id,"Completed")}>✓</button>
+                            <button className="btn b-done" onClick={()=>updateStatus(b.id,"Completed")} style={{display:"inline-flex",alignItems:"center",justifyContent:"center"}}><Check size={13}/></button>
                             <button className="btn b-confirm" onClick={()=>updateStatus(b.id,"Confirmed")}>OK</button>
                             <button className="btn b-wa" onClick={()=>sendWA(b)}>WA</button>
                           </div>
@@ -347,7 +349,7 @@ export default function StaffPanel() {
             {upcomingAll.filter(b=>b.booking_date > today).length > 0 && (
               <div className="tl-wrap">
                 <div className="tl-head">
-                  <span className="tl-title">🔜 Upcoming</span>
+                  <span className="tl-title">Upcoming</span>
                   <span className="tl-count" style={{ cursor:"pointer", color:"#c9a84c" }} onClick={()=>setTab("schedule")}>View All →</span>
                 </div>
                 {upcomingAll.filter(b=>b.booking_date > today).slice(0,3).map(b => {
@@ -362,7 +364,7 @@ export default function StaffPanel() {
                         <div className="tl-svc">{b.service}</div>
                         <div className="tl-tags">
                           {p > 0 && <span className="tag tag-price">₹{p.toLocaleString()}</span>}
-                          {b.address && <span className="tag tag-home">🏠</span>}
+                          {b.address && <span className="tag tag-home"><Home size={10}/></span>}
                         </div>
                       </div>
                       <button className="btn b-wa" style={{ flexShrink:0 }} onClick={()=>sendWA(b)}>WA</button>
@@ -376,7 +378,7 @@ export default function StaffPanel() {
           {/* ── SCHEDULE TAB ── */}
           {tab === "schedule" && (<>
             {groupedByDate.length === 0
-              ? <div className="empty"><div className="empty-ic">📅</div><div style={{ fontSize:13,color:"#383838" }}>No Bookings yet</div></div>
+              ? <div className="empty"><div className="empty-ic"><Calendar size={28} strokeWidth={1.5} /></div><div style={{ fontSize:13,color:"#383838" }}>No Bookings yet</div></div>
               : groupedByDate.map(([date, list]) => (
                 <div key={date} className="sc-day">
                   <div className="sc-day-head">
@@ -394,13 +396,13 @@ export default function StaffPanel() {
                           <div className="appt-svc">{b.service}</div>
                           <div className="appt-meta">
                             <span className="appt-time">{b.booking_time}</span>
-                            <span style={{ fontSize:10,color:"#484848" }}>📞 {b.phone}</span>
-                            {b.address && <span className="tag tag-home" style={{ padding:"2px 7px",fontSize:9 }}>🏠 Home</span>}
+                            <span style={{ fontSize:10,color:"#484848",display:"inline-flex",alignItems:"center",gap:3 }}><Phone size={10}/> {b.phone}</span>
+                            {b.address && <span className="tag tag-home" style={{ padding:"2px 7px",fontSize:9,display:"inline-flex",alignItems:"center",gap:3 }}><Home size={9}/> Home</span>}
                           </div>
-                          {b.address && <div style={{ fontSize:11,color:"#585858",marginTop:6,padding:"5px 9px",background:"rgba(255,255,255,0.02)",borderRadius:7 }}>📍 {b.address}</div>}
+                          {b.address && <div style={{ fontSize:11,color:"#585858",marginTop:6,padding:"5px 9px",background:"rgba(255,255,255,0.02)",borderRadius:7,display:"flex",alignItems:"center",gap:4 }}><MapPin size={11}/> {b.address}</div>}
                           {(b.status==="Pending"||b.status==="Confirmed") && (
                             <div style={{ display:"flex",gap:6,marginTop:10 }}>
-                              <button className="btn b-done" onClick={()=>updateStatus(b.id,"Completed")}>✓ Done</button>
+                              <button className="btn b-done" onClick={()=>updateStatus(b.id,"Completed")} style={{display:"inline-flex",alignItems:"center",gap:4}}><Check size={13}/>Done</button>
                               <button className="btn b-confirm" onClick={()=>updateStatus(b.id,"Confirmed")}>Confirm</button>
                               <button className="btn b-wa" onClick={()=>sendWA(b)}>WhatsApp</button>
                               <button className="btn b-cancel" onClick={()=>updateStatus(b.id,"Cancelled")}>Cancel</button>
@@ -438,7 +440,7 @@ export default function StaffPanel() {
 
             {/* Monthly trend */}
             <div className="tl-wrap" style={{ marginBottom:14 }}>
-              <div className="tl-head"><span className="tl-title">📊 Monthly Revenue</span></div>
+              <div className="tl-head"><span className="tl-title">Monthly Revenue</span></div>
               <div style={{ padding:"14px 16px" }}>
                 {monthlyData.map((m,i) => (
                   <div key={i} style={{ display:"flex",alignItems:"center",gap:10,marginBottom:10 }}>
@@ -455,7 +457,7 @@ export default function StaffPanel() {
 
             {/* Service breakdown */}
             <div className="tl-wrap">
-              <div className="tl-head"><span className="tl-title">💅 Service-wise Revenue</span></div>
+              <div className="tl-head"><span className="tl-title">Service-wise Revenue</span></div>
               <div style={{ padding:"10px 16px" }}>
                 {svcRevenue.length === 0
                   ? <div style={{ color:"#2a2a2a",fontSize:12,padding:"16px 0" }}>No booking till now
@@ -500,7 +502,7 @@ export default function StaffPanel() {
               { k:"Name",          v: me.name },
               { k:"Email",         v: me.email },
               { k:"Role",          v: me.role },
-              { k:"Status",        v: me.active ? "✅ Active" : "Inactive" },
+              { k:"Status",        v: me.active ? "Active" : "Inactive" },
               { k:"Today",           v: `${todayList.length} appointments` },
               { k:"Revenue This Month",     v: `₹${monthRev.toLocaleString()} revenue` },
               { k:"Most Popular Service", v: svcRevenue[0]?.[0] || "—" },
@@ -517,11 +519,11 @@ export default function StaffPanel() {
         {/* BOTTOM NAV */}
         <div className="bnav">
           {([
-            ["today",   "📅", "Today"],
-            ["schedule","🗓", "Schedule"],
-            ["revenue", "💰", "Revenue"],
-            ["profile", "👤", "Profile"],
-          ] as [Tab,string,string][]).map(([t,ic,lb]) => (
+            ["today",    <CalendarDays size={15} />, "Today"],
+            ["schedule", <Calendar size={15} />,     "Schedule"],
+            ["revenue",  <TrendingUp size={15} />,   "Revenue"],
+            ["profile",  <User size={15} />,         "Profile"],
+          ] as [Tab, React.ReactNode, string][]).map(([t,ic,lb]) => (
             <button key={t} className={`bni ${tab===t?"on":""}`} onClick={()=>setTab(t)}>
               <span className="bni-ic">{ic}</span>
               <span className="bni-lb">{lb}</span>
@@ -549,7 +551,7 @@ export default function StaffPanel() {
           `}</style>
           <div className="sf-overlay" onClick={() => setShowLogout(false)}>
             <div className="sf-box" onClick={e => e.stopPropagation()}>
-              <div className="sf-icon">↩️</div>
+              <div className="sf-icon"><LogOut size={24} /></div>
               <div className="sf-title">Logout</div>
               <div className="sf-msg">Are you sure you want to logout from the Staff Panel?</div>
               <div className="sf-btns">

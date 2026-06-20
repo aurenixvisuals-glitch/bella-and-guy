@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { allCategories } from "../lib/servicesData";
+import { Store, Home } from "lucide-react";
 
 export default function BookingForm() {
   const [fullName, setFullName] = useState("");
@@ -161,7 +162,7 @@ export default function BookingForm() {
               {[false, true].map((val) => (
                 <button key={String(val)} type="button" onClick={() => setIsHome(val)}
                   className={`booking-type-btn ${isHome === val ? "active" : ""}`}>
-                  {val ? "🏠  Home Service" : "🏪  At Salon"}
+                  {val ? <><Home size={14} style={{marginRight:7}}/>Home Service</> : <><Store size={14} style={{marginRight:7}}/>At Salon</>}
                 </button>
               ))}
             </div>
