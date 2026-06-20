@@ -129,7 +129,7 @@ export default function LoginPage() {
       if (!staffRow) { await supabase.auth.signOut(); setError("Access denied. You are not an admin."); setLoading(false); return; }
       if (staffRow.role && staffRow.role !== "admin") { await supabase.auth.signOut(); setError("Access denied. Please use the Staff tab."); setLoading(false); return; }
       document.cookie = `bg_role=admin; path=/; max-age=${COOKIE_MAX}; SameSite=Strict`;
-      router.push("/admin");
+      router.push("/bg-secure-4x9k");
     } else {
       if (!staffRow) { await supabase.auth.signOut(); setError("Access denied. No staff record found."); setLoading(false); return; }
       if (staffRow.role && staffRow.role === "admin") { await supabase.auth.signOut(); setError("Access denied. Please use the Admin tab."); setLoading(false); return; }

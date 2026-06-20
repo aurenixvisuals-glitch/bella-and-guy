@@ -4,7 +4,7 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const role = request.cookies.get("bg_role")?.value;
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/bg-secure-4x9k")) {
     if (!role || role !== "admin") {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -20,5 +20,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/staff/:path*"],
+  matcher: ["/bg-secure-4x9k/:path*", "/staff/:path*"],
 };
