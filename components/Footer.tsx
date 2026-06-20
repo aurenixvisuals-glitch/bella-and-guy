@@ -217,6 +217,11 @@ export default function Footer() {
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "rgba(201,168,76,0.4)", display: "inline-block" }} />
             Wave City, Ghaziabad, UP
           </span>
+          <a href="/login" style={{ fontSize: "11px", color: "rgba(255,255,255,0.08)", textDecoration: "none", letterSpacing: "0.06em", transition: "color 0.3s ease" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "rgba(201,168,76,0.5)") as any}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.08)") as any}>
+            Staff Portal
+          </a>
         </div>
       </footer>
     </>
