@@ -810,10 +810,10 @@ export default function AdminPage() {
   }
 
   function csvExport() {
-    const h = ["ID", "Client Name", "Phone", "Service", "Date", "Time", "Address", "Status", "Staff", "Type", "Price (Rs.)"];
+    const h = ["ID", "Client Name", "Phone", "Email", "Service", "Date", "Time", "Address", "Status", "Staff", "Type", "Price (Rs.)"];
     const rows = filteredBookings.map(b => [
-      b.id, b.full_name, b.phone, b.service,
-      b.booking_date, b.booking_time,
+      b.id, b.full_name, b.phone, b.email || "",
+      b.service, b.booking_date, b.booking_time,
       b.address || "", b.status, b.staff || "",
       b.address ? "Home Service" : "Salon",
       price(b) || 0,
@@ -1625,6 +1625,7 @@ export default function AdminPage() {
               {[
                 ["Client",   selectedBooking.full_name],
                 ["Phone",    selectedBooking.phone],
+                ["Email",    selectedBooking.email || "—"],
                 ["Service",  selectedBooking.service],
                 ["Date",     selectedBooking.booking_date],
                 ["Time",     selectedBooking.booking_time],
@@ -1636,7 +1637,10 @@ export default function AdminPage() {
               ].map(([k,v]) => (
                 <div className="mr" key={k}>
                   <span className="mk">{k}</span>
-                  <span className="mv" style={{ color: k==="Price"?"#4fd080":k==="Status"?(STATUS_CONFIG[v]?.text||"#ddd"):"#ddd" }}>{v}</span>
+                  {k === "Email" && selectedBooking.email
+                    ? <a href={`mailto:${selectedBooking.email}`} className="mv" style={{ color:"#c9a84c", textDecoration:"none" }}>{v}</a>
+                    : <span className="mv" style={{ color: k==="Price"?"#4fd080":k==="Status"?(STATUS_CONFIG[v]?.text||"#ddd"):"#ddd" }}>{v}</span>
+                  }
                 </div>
               ))}
 

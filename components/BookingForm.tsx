@@ -145,8 +145,8 @@ export default function BookingForm() {
       .select("id", { count: "exact", head: true })
       .eq("phone", cleaned)
       .gte("created_at", twoHrsAgo);
-    if ((count ?? 0) > 0) {
-      setSpamError("A booking from this number was made recently. Please wait 2 hours before booking again.");
+    if ((count ?? 0) >= 3) {
+      setSpamError("Maximum 3 bookings allowed per 2 hours from the same number. Please contact us directly.");
       return;
     }
 
