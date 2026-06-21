@@ -165,6 +165,8 @@ export default function WhyChooseUs() {
         @media (max-width: 560px) {
           .wcu-grid { grid-template-columns: 1fr; }
           .wcu-section { padding: 72px 16px; }
+          .wcu-top { flex-direction: column; gap: 16px; margin-bottom: 40px; }
+          .wcu-card { padding: 24px 20px; }
         }
       `}</style>
 

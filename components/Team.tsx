@@ -241,7 +241,8 @@ export default function Team() {
         /* Mobile */
         @media (max-width: 1100px) { .tm-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 750px)  { .tm-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .tm-section { padding: 80px 16px 90px; } }
-        @media (max-width: 420px)  { .tm-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 420px)  { .tm-grid { grid-template-columns: 1fr 1fr; gap: 10px; } }
+        @media (max-width: 360px)  { .tm-grid { grid-template-columns: 1fr; } }
       `}</style>
 
       <section id="team" className="tm-section" ref={sectionRef}>

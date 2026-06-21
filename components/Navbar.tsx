@@ -259,9 +259,9 @@ export default function Navbar() {
         left:   scrolled ? "16px" : "0",
         right:  scrolled ? "16px" : "0",
         borderRadius: scrolled ? "16px" : "0",
-        background: scrolled ? "rgba(12,9,6,0.72)" : "transparent",
-        backdropFilter: scrolled ? "blur(40px) saturate(180%) brightness(90%)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(40px) saturate(180%) brightness(90%)" : "none",
+        background: (scrolled || menuOpen) ? "rgba(10,8,5,0.95)" : "transparent",
+        backdropFilter: (scrolled || menuOpen) ? "blur(40px) saturate(180%) brightness(90%)" : "none",
+        WebkitBackdropFilter: (scrolled || menuOpen) ? "blur(40px) saturate(180%) brightness(90%)" : "none",
         border: scrolled ? "1px solid rgba(255,255,255,0.10)" : "none",
         boxShadow: scrolled
           ? "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.3), 0 16px 48px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2)"

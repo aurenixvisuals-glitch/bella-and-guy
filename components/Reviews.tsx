@@ -130,6 +130,11 @@ export default function Reviews() {
 
         @media (max-width: 900px) { .rv-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 560px) { .rv-grid { grid-template-columns: 1fr; } .rv-section { padding: 72px 16px; } }
+        @media (max-width: 480px) {
+          .rv-rating-row { flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
+          .rv-count { border-left: none; padding-left: 0; font-size: 11px; }
+          .rv-card { padding: 20px; }
+        }
       `}</style>
 
       <section id="reviews" className="rv-section" ref={sectionRef}>

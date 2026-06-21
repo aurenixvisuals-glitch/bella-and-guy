@@ -273,6 +273,19 @@ export default function Faq() {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 4px 16px rgba(0,0,0,0.06);
         }
         .faq-cta-call:hover { background: rgba(201,168,76,0.18); border-color: rgba(201,168,76,0.7); transform: translateY(-4px) scale(1.03); box-shadow: 0 12px 28px rgba(201,168,76,0.2), inset 0 1px 0 rgba(255,255,255,0.7); }
+
+        @media (max-width: 768px) {
+          .faq-section { padding: 80px 20px; }
+          .faq-cta { padding: 40px 24px; }
+        }
+        @media (max-width: 480px) {
+          .faq-section { padding: 60px 16px; }
+          .faq-cta { padding: 32px 16px; }
+          .faq-cta-btns { flex-direction: column; align-items: stretch; }
+          .faq-cta-wa, .faq-cta-call { justify-content: center; }
+          .faq-q { font-size: 16px; }
+          .faq-trigger { padding: 18px 0; gap: 16px; }
+        }
       `}</style>
 
       <section id="faq" className="faq-section">
