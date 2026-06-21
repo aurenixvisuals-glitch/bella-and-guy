@@ -245,6 +245,11 @@ export default function BookingForm() {
         @media (max-width: 600px) {
           .booking-card { padding: 28px 20px; }
         }
+        @media (max-width: 480px) {
+          .booking-card { padding: 20px 14px; }
+          .form-row-grid { grid-template-columns: 1fr !important; }
+          .booking-type-btn { padding: 12px 10px; font-size: 11px; }
+        }
 
         /* ── Booking Confirmation Modal ── */
         @keyframes bcOverlayIn {
@@ -449,7 +454,7 @@ export default function BookingForm() {
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div className="form-row-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
                   <label className="field-label">Full Name *</label>
                   <input type="text" value={fullName} onChange={e => setFullName(e.target.value)}
@@ -494,7 +499,7 @@ export default function BookingForm() {
                 )}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div className="form-row-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
                   <label className="field-label">Preferred Date *</label>
                   <input type="date" value={bookingDate} onChange={e => setBookingDate(e.target.value)}

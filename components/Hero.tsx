@@ -345,6 +345,15 @@ export default function Hero() {
           .hero-content { padding: 120px 20px 80px; }
           .hero-line-right { display: none; }
         }
+        @media (max-width: 480px) {
+          .hero-content { padding: 100px 16px 60px; }
+          .hero-ctas { flex-direction: column; gap: 10px; }
+          .cta-gold, .cta-outline { width: 100%; justify-content: center; padding: 14px 20px; }
+          .stat-num { font-size: 22px; }
+          .stat-lbl { font-size: 10px; }
+          .stat-item { padding: 16px 10px; }
+          .stats-bar { margin-top: 32px; }
+        }
       `}</style>
 
       <section id="home" className="hero-section">

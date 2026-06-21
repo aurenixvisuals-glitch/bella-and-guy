@@ -161,6 +161,12 @@ export default function Footer() {
             grid-template-columns: 1fr;
           }
         }
+        @media (max-width: 480px) {
+          .footer-main { padding: 48px 16px 32px; gap: 32px; }
+          .footer-bottom { padding: 20px 16px; }
+          .footer-social-btn { width: 40px; height: 40px; font-size: 16px; }
+          .footer-book-btn { width: 100%; justify-content: center; }
+        }
       `}</style>
 
       <footer className="footer">

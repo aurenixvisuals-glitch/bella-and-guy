@@ -203,6 +203,17 @@ export default function HomeService() {
           transform: translateY(-2px);
           box-shadow: 0 12px 32px rgba(201,168,76,0.35);
         }
+
+        @media (max-width: 768px) {
+          .hs-main-grid { grid-template-columns: 1fr !important; gap: 56px !important; }
+          .hs-section { padding: 80px 20px; }
+        }
+        @media (max-width: 480px) {
+          .hs-section { padding: 60px 16px; }
+          .trust-grid { grid-template-columns: 1fr; }
+          .hs-book-btn { width: 100%; justify-content: center; padding: 14px 24px; }
+          .hs-service-card { padding: 14px; gap: 10px; }
+        }
       `}</style>
 
       <section id="home-service" className="hs-section" ref={sectionRef}>
@@ -232,7 +243,7 @@ export default function HomeService() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "72px", alignItems: "start" }}>
+          <div className="hs-main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "72px", alignItems: "start" }}>
 
             {/* Left: Services */}
             <div className="reveal-left">

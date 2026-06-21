@@ -251,6 +251,15 @@ export default function Services() {
           .sv-panel-foot { flex-direction: column; align-items: flex-start; padding: 14px 20px 22px; }
           .sv-selected-badge { max-width: 100%; }
         }
+        @media (max-width: 480px) {
+          .sv-grid { grid-template-columns: 1fr; gap: 10px; }
+          .sv-section { padding: 60px 16px 80px; }
+          .sv-panel-head { padding: 16px 16px 12px; }
+          .sv-panel-body { padding: 0 16px; }
+          .sv-panel-foot { padding: 12px 16px 18px; }
+          .sv-panel-close { width: 40px; height: 40px; }
+          .sv-card-name { font-size: 14px; }
+        }
       `}</style>
 
       <section id="services" className="sv-section" ref={sectionRef}>

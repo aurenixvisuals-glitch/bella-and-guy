@@ -250,6 +250,11 @@ export default function Gallery() {
           .gl-arrow { width: 38px; height: 38px; font-size: 16px; }
           .gl-dots { padding-bottom: 4px; }
         }
+        @media (max-width: 480px) {
+          .gl-caption { padding: 0 14px 24px; flex-direction: column; align-items: flex-start; gap: 8px; }
+          .gl-caption-sub { font-size: 11px; }
+          .gl-arrow { display: none; }
+        }
       `}</style>
 
       <section id="gallery" className="gl-section">

@@ -159,6 +159,15 @@ export default function Contact() {
           align-items: center;
           gap: 10px;
         }
+
+        @media (max-width: 768px) {
+          .contact-main-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
+          .contact-section { padding: 80px 20px; }
+        }
+        @media (max-width: 480px) {
+          .contact-section { padding: 60px 16px; }
+          .whatsapp-cta { width: 100%; justify-content: center; }
+        }
       `}</style>
 
       <section id="contact" className="contact-section">
@@ -180,7 +189,7 @@ export default function Contact() {
             <div style={{ width: "40px", height: "1px", background: "linear-gradient(90deg, transparent, #C9A84C, transparent)", margin: "0 auto" }} />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px" }}>
+          <div className="contact-main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px" }}>
 
             {/* Left */}
             <div>
