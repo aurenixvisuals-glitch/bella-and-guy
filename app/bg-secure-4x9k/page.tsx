@@ -17,7 +17,7 @@ import {
   Database, Activity, LogOut, Check, Trash2, CalendarClock,
   MessageCircle, Download, Shield, RefreshCw, Ban,
   Search, Trophy, BarChart2, DollarSign, AlertTriangle, CheckCircle,
-  Info, X, FileText, AlertCircle, Star, Eye
+  Info, X, FileText, AlertCircle, Star, Eye, Menu
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────
@@ -281,6 +281,76 @@ input:checked + .bk-slider::before { background: #c9a84c; transform: translateX(
 .rev-bar-wrap { flex: 1; margin: 0 16px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
 .rev-bar { height: 100%; background: linear-gradient(90deg,#c9a84c,#f5d98b); border-radius: 2px; transition: width 1s cubic-bezier(0.22,1,0.36,1); }
 .tomorrow-box { background: rgba(245,199,90,0.06); border: 1px solid rgba(245,199,90,0.2); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; }
+
+/* ── MOBILE ──────────────────────────────────────────── */
+.mob-menu-btn { display: none; }
+.sb-close-btn { display: none; }
+.sb-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 998; }
+.sb-overlay.vis { display: block; }
+
+@media (max-width: 768px) {
+  .sb {
+    position: fixed; left: -240px; top: 0; height: 100dvh;
+    width: 220px; min-width: 220px;
+    transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
+    z-index: 999;
+  }
+  .sb.sb-open { left: 0; box-shadow: 6px 0 32px rgba(0,0,0,0.75); }
+  .mc { width: 100%; }
+  .mob-menu-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: #888; cursor: pointer; margin-right: 8px;
+  }
+  .sb-close-btn {
+    display: flex; align-items: center; justify-content: flex-end; gap: 6px;
+    padding: 12px 14px 4px; border: none; background: none;
+    color: #555; cursor: pointer; width: 100%; font-size: 12px; font-family: 'Inter',sans-serif;
+  }
+  .sb-close-btn:hover { color: #999; }
+  .topbar { padding: 12px 14px; }
+  .tb-title { font-size: 15px; }
+  .tb-sub { display: none; }
+  .pb { padding: 14px 12px; }
+  .sg { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .sc { padding: 12px; }
+  .sc-val { font-size: 20px; }
+  .sc-lbl { font-size: 8px; }
+  .today-kpi-grid { grid-template-columns: repeat(2,1fr) !important; }
+  .today-main-grid { grid-template-columns: 1fr !important; }
+  .dash-2col-grid { grid-template-columns: 1fr !important; }
+  .rev-2col-grid { grid-template-columns: 1fr !important; }
+  .fb { flex-direction: column; gap: 8px; }
+  .si { min-width: unset; }
+  .fb-btns { flex-wrap: wrap; }
+  .fb-divider { display: none; }
+  .type-sel { width: 100%; }
+  .kpi-row { grid-template-columns: repeat(2,1fr); }
+  .kpi { padding: 14px; }
+  .kpi-val { font-size: 20px; }
+  .staff-grid { grid-template-columns: repeat(2,1fr); }
+  .bk-grid { grid-template-columns: 1fr; }
+  .mb { padding: 0; align-items: flex-end; }
+  .mbox { width: 100%; max-width: 100%; border-radius: 18px 18px 0 0; padding: 22px 16px 28px; max-height: 90vh; overflow-y: auto; }
+  .hb { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .ma { flex-wrap: wrap; }
+  .toast { left: 10px; right: 10px; max-width: unset; font-size: 12px; padding: 12px 14px; top: 10px; }
+  .log-table td, .log-table th { padding: 8px 10px; font-size: 11px; }
+  .bk-btn { padding: 11px 12px; }
+  .card { padding: 14px; }
+  .card-title { font-size: 12px; }
+  .tb-user-info { display: none; }
+}
+@media (max-width: 480px) {
+  .sc-val { font-size: 18px; }
+  .sc { padding: 10px; }
+  .staff-grid { grid-template-columns: 1fr; }
+  .pb { padding: 12px 10px; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .topbar { padding: 10px 10px; }
+  .mob-menu-btn { width: 32px; height: 32px; }
+}
 `;
 
 export default function AdminPage() {
@@ -305,6 +375,7 @@ export default function AdminPage() {
   const [backupHistory, setBackupHistory] = useState<{ date: string; type: string; size: string }[]>(() => { try { return JSON.parse(localStorage.getItem("bg_backup_history") || "[]"); } catch { return []; } });
   const [backingUp, setBackingUp] = useState(false);
   const [activityLogs, setActivityLogs] = useState<{ id: number; created_at: string; actor: string; actor_role: string; action: string; details: string; entity_type?: string }[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAdmin = !currentStaff || currentStaff.role === "admin";
 
   function showConfirm(title: string, message: string, onConfirm: () => void, opts?: { confirmLabel?: string; icon?: React.ReactNode; danger?: boolean }) {
@@ -863,7 +934,9 @@ export default function AdminPage() {
       <div className="adm">
 
         {/* SIDEBAR */}
-        <aside className="sb">
+        <div className={`sb-overlay${sidebarOpen ? " vis" : ""}`} onClick={() => setSidebarOpen(false)} />
+        <aside className={`sb${sidebarOpen ? " sb-open" : ""}`}>
+          <button className="sb-close-btn" onClick={() => setSidebarOpen(false)}><X size={16}/> Close</button>
           <div className="sb-logo">
             <div className="sb-icon"><img src="/images/logo.png" alt="Bella & Guy" /></div>
             <div><div className="sb-title">Bella & Guy</div><div className="sb-sub">Admin Panel</div></div>
@@ -871,7 +944,7 @@ export default function AdminPage() {
           <nav className="sb-nav">
             <div className="nav-label">Navigation</div>
             {NAV.map(([tab, icon, label, count]) => (
-              <button key={tab} className={`ni ${activeTab === tab ? "on" : ""}`} onClick={() => setActiveTab(tab)}>
+              <button key={tab} className={`ni ${activeTab === tab ? "on" : ""}`} onClick={() => { setActiveTab(tab); setSidebarOpen(false); }}>
                 <span style={{ display:"flex", alignItems:"center", opacity: activeTab === tab ? 1 : 0.5 }}>{icon}</span>
                 <span style={{ flex: 1 }}>{label}</span>
                 {count > 0 && <span className="ni-badge">{count}</span>}
@@ -898,16 +971,17 @@ export default function AdminPage() {
         {/* MAIN */}
         <div className="mc">
           <div className="topbar">
-            <div>
+            <button className="mob-menu-btn" onClick={() => setSidebarOpen(true)}><Menu size={18}/></button>
+            <div style={{ flex: 1 }}>
               <div className="tb-title">
-                { activeTab === "dashboard" ? "Dashboard" : activeTab === "bookings" ? "Appointments" : activeTab === "revenue" ? "Revenue Analytics" : activeTab === "staff" ? "Staff Management" : "Messages" }
+                { activeTab === "dashboard" ? "Dashboard" : activeTab === "bookings" ? "Appointments" : activeTab === "revenue" ? "Revenue Analytics" : activeTab === "staff" ? "Staff Management" : activeTab === "contacts" ? "Messages" : activeTab === "backup" ? "Backup" : "Activity Log" }
               </div>
               <div className="tb-sub">
                 {new Date().toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              {currentStaff && <span style={{ fontSize: 11, color: "#484848" }}>Logged in as <strong style={{ color: "#c9a84c" }}>{currentStaff.name}</strong></span>}
+              {currentStaff && <span className="tb-user-info" style={{ fontSize: 11, color: "#484848" }}>Logged in as <strong style={{ color: "#c9a84c" }}>{currentStaff.name}</strong></span>}
               <div className="live-pill"><div className="live-dot" /> Live</div>
             </div>
           </div>
@@ -1010,7 +1084,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* KPI row */}
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:14 }}>
+                    <div className="today-kpi-grid" style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:10, marginBottom:14 }}>
                       {[
                         { lbl:"Revenue",   val:`₹${todayRevCalc.toLocaleString()}`, color:"#c9a84c",  icon:"₹" },
                         { lbl:"Bookings",  val:todayBookings.length,                color:"#c4a4ff",  icon:"📋" },
@@ -1025,7 +1099,7 @@ export default function AdminPage() {
                       ))}
                     </div>
 
-                    <div style={{ display:"grid", gridTemplateColumns:"1.7fr 1fr", gap:12 }}>
+                    <div className="today-main-grid" style={{ display:"grid", gridTemplateColumns:"1.7fr 1fr", gap:12 }}>
                       {/* Today's bookings table */}
                       <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:14, overflow:"hidden" }}>
                         <div style={{ padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center", gap:8 }}>
@@ -1115,7 +1189,7 @@ export default function AdminPage() {
                 );
               })()}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
+              <div className="dash-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 16 }}>
                 <div className="card">
                   <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><Trophy size={13}/>Top Services (All Time)</div>
                   {Object.entries(bookings.reduce((a,b) => { a[b.service]=(a[b.service]||0)+1; return a; }, {} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([s,c]) => (
@@ -1293,7 +1367,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16 }}>
+              <div className="rev-2col-grid" style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16 }}>
                 <div className="card">
                   <div className="card-title" style={{display:"flex",alignItems:"center",gap:6}}><DollarSign size={13}/>Revenue by Service</div>
                   {serviceRevenue.length === 0
