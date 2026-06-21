@@ -384,11 +384,13 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-              {customerLoggedIn && (
+              {customerLoggedIn ? (
                 <>
                   <a href="/my-bookings" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>My Bookings</a>
                   <button className="mobile-nav-link" style={{ background:"none",border:"none",color:"rgba(245,101,101,0.8)",cursor:"pointer",width:"100%",textAlign:"left",fontFamily:"inherit",fontSize:13,letterSpacing:"0.1em",textTransform:"uppercase" }} onClick={handleLogout}>Logout</button>
                 </>
+              ) : (
+                <a href="/customer-login" className="mobile-nav-link" onClick={() => setMenuOpen(false)}>Login</a>
               )}
               <a href="#booking" onClick={() => setMenuOpen(false)} style={{
                 display: "inline-block", marginTop: "20px",
