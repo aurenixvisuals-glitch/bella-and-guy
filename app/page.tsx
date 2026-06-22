@@ -8,7 +8,7 @@ const WhyChooseUs    = dynamic(() => import("@/components/WhyChooseUs"));
 const HomeService    = dynamic(() => import("@/components/HomeService"));
 const Gallery        = dynamic(() => import("@/components/Gallery"));
 const Team           = dynamic(() => import("@/components/Team"));
-const BookingForm    = dynamic(() => import("@/components/BookingForm"));
+const BookingCTA     = dynamic(() => import("@/components/BookingCTA"));
 const Reviews        = dynamic(() => import("@/components/Reviews"));
 const Faq            = dynamic(() => import("@/components/Faq"));
 const Contact        = dynamic(() => import("@/components/Contact"));
@@ -32,7 +32,7 @@ export default function Home() {
       <Divider dark />
       <Team />
       <Divider />
-      <BookingForm />
+      <BookingCTA />
       <Divider />
       <Reviews />
       <Divider />
