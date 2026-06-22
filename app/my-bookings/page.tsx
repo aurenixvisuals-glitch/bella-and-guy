@@ -316,7 +316,7 @@ export default function MyBookings() {
                 </svg>
                 Back to Home
               </a>
-              <a href="/#booking" className="mb-book-link">+ New Booking</a>
+              <a href="/book" className="mb-book-link">+ New Booking</a>
               <button onClick={() => setShowLogout(true)} className="mb-logout-btn">Sign Out</button>
             </div>
           </div>
@@ -430,7 +430,7 @@ export default function MyBookings() {
                     <div className="mb-empty">
                       <p style={{ fontSize: "16px", marginBottom: "8px", color: "rgba(255,255,255,0.35)" }}>No appointments yet</p>
                       <p>Your booking history will appear here once you make your first appointment.</p>
-                      <a href="/#booking" className="mb-book-cta">Book Your First Appointment →</a>
+                      <a href="/book" className="mb-book-cta">Book Your First Appointment →</a>
                     </div>
                   )}
                 </>

@@ -93,7 +93,7 @@ export default function BookingCTA() {
         }
       `}</style>
 
-      <section id="booking" className="bcta-wrap">
+      <section className="bcta-wrap">
         <div className="bcta-inner">
           <div className="bcta-badge">
             <span className="bcta-pill-dot" />
