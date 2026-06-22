@@ -7,7 +7,7 @@ export default function Footer() {
     { label: "Services", href: "#services" },
     { label: "Home Service", href: "#home-service" },
     { label: "Gallery", href: "#gallery" },
-    { label: "Book Appointment", href: "#booking" },
+    { label: "Book Appointment", href: "/book" },
     { label: "Contact", href: "#contact" },
   ];
 
@@ -214,7 +214,7 @@ export default function Footer() {
             <span className="footer-contact-item">Wave City, Ghaziabad, UP 201003</span>
             <a href="tel:+919876543210" className="footer-contact-item">+91 98765 43210</a>
             <span className="footer-contact-item">Mon – Sun, 9:00 AM – 8:00 PM</span>
-            <a href="#booking" className="footer-book-btn">
+            <a href="/book" className="footer-book-btn">
               Book Now →
             </a>
           </div>

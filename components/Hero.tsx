@@ -407,7 +407,7 @@ export default function Hero() {
             </p>
 
             <div className={`hero-ctas ${textVisible ? "vis" : ""}`}>
-              <a href="#booking" className="cta-gold">Book Appointment →</a>
+              <a href="/book" className="cta-gold">Book Appointment →</a>
               <a href="#home-service" className="cta-outline">Home Service</a>
             </div>
 

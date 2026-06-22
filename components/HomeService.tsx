@@ -265,7 +265,7 @@ export default function HomeService() {
                 ))}
               </div>
               <a
-                href="#booking"
+                href="/book"
                 className="hs-book-btn"
                 onClick={() => {
                   sessionStorage.setItem("bookingType", "home");
