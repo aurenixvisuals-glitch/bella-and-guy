@@ -958,7 +958,7 @@ export default function AdminPage() {
               <button className="sb-btn sb-sec" onClick={pdfRevenue} style={{display:"inline-flex",alignItems:"center",gap:6}}><TrendingUp size={13}/>Revenue PDF</button>
               <button className="sb-btn sb-sec" onClick={pdfStaff} style={{display:"inline-flex",alignItems:"center",gap:6}}><Users size={13}/>Staff PDF</button>
               <button className="sb-btn sb-sec" onClick={csvExport} style={{display:"inline-flex",alignItems:"center",gap:6}}><Download size={13}/>Export CSV</button>
-              <button className="sb-btn sb-red" style={{display:"inline-flex",alignItems:"center",gap:6}} onClick={() => showConfirm("Logout", "Are you sure you want to logout from the admin panel?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: <LogOut size={22}/>, danger: true })}><LogOut size={13}/>Logout</button>
+              <button className="sb-btn sb-red" style={{display:"inline-flex",alignItems:"center",gap:6}} onClick={() => showConfirm("Logout", "Are you sure you want to log out from the admin panel?", async () => { setConfirmModal(null); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }, { confirmLabel: "Logout", icon: <LogOut size={22}/>, danger: true })}><LogOut size={13}/>Logout</button>
             </div>
           )}
           {!isAdmin && (

@@ -460,7 +460,7 @@ export default function StaffPanel() {
               <div className="tl-head"><span className="tl-title">Service-wise Revenue</span></div>
               <div style={{ padding:"10px 16px" }}>
                 {svcRevenue.length === 0
-                  ? <div style={{ color:"#2a2a2a",fontSize:12,padding:"16px 0" }}>No booking till now
+                  ? <div style={{ color:"#2a2a2a",fontSize:12,padding:"16px 0" }}>No bookings till now
                   </div>
                   : svcRevenue.map(([svc, rev]) => (
                     <div key={svc} className="svc-row">
@@ -553,7 +553,7 @@ export default function StaffPanel() {
             <div className="sf-box" onClick={e => e.stopPropagation()}>
               <div className="sf-icon"><LogOut size={24} /></div>
               <div className="sf-title">Logout</div>
-              <div className="sf-msg">Are you sure you want to logout from the Staff Panel?</div>
+              <div className="sf-msg">Are you sure you want to log out from the Staff Panel?</div>
               <div className="sf-btns">
                 <button className="sf-keep" onClick={() => setShowLogout(false)}>Stay</button>
                 <button className="sf-out" onClick={async () => { setShowLogout(false); document.cookie="bg_role=;path=/;max-age=0;SameSite=Strict"; await supabase.auth.signOut(); router.push("/login"); }}>Logout</button>
