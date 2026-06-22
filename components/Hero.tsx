@@ -390,7 +390,7 @@ export default function Hero() {
 
             <div className={`hero-badge ${textVisible ? "vis" : ""}`}>
               <span className="hero-badge-live" />
-              <span className="hero-badge-text">Wave City&#39;s Premier Unisex Salon</span>
+              <span className="hero-badge-text">Wave City&#39;s Premium Unisex Salon</span>
             </div>
 
             <h1 className="hero-h1">
