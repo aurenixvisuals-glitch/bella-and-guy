@@ -175,7 +175,7 @@ export default function WhyChooseUs() {
       <section id="why-us" className="wcu-section" ref={sectionRef}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
 
-          <div className="wcu-top">
+          <div className="wcu-top" style={{ flexDirection: "column", alignItems: "center", textAlign: "center" }}>
             <div>
               <div className="reveal" style={{ marginBottom: "14px" }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", fontWeight: "600", letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A84C" }}>
@@ -183,11 +183,11 @@ export default function WhyChooseUs() {
                   Our Promise
                 </span>
               </div>
-              <h2 className="reveal" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px, 5vw, 52px)", fontWeight: "400", color: "#080808", lineHeight: "1.1", maxWidth: "440px" }}>
+              <h2 className="reveal" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px, 5vw, 52px)", fontWeight: "400", color: "#080808", lineHeight: "1.1", textAlign: "center" }}>
                 Why Choose<br /><em style={{ fontStyle: "italic", color: "#C9A84C" }}>Bella & Guy?</em>
               </h2>
             </div>
-            <p className="reveal" style={{ color: "#6B6B6B", fontSize: "15px", maxWidth: "320px", lineHeight: "1.7" }}>
+            <p className="reveal" style={{ color: "#6B6B6B", fontSize: "15px", maxWidth: "520px", lineHeight: "1.7", textAlign: "center" }}>
               We hold ourselves to a higher standard — because your time, trust and appearance matter.
             </p>
           </div>

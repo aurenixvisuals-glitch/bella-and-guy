@@ -403,7 +403,7 @@ export default function Hero() {
             </h1>
 
             <p className={`hero-tag ${textVisible ? "vis" : ""}`}>
-              Premium beauty &amp; grooming for everyone — 50+ services at our luxurious salon in Ghaziabad, or right at your doorstep.
+              Where Beauty Meets Affordability
             </p>
 
             <div className={`hero-ctas ${textVisible ? "vis" : ""}`}>
