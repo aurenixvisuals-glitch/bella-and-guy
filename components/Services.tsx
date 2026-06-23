@@ -37,10 +37,8 @@ export default function Services() {
     const value = selectedService
       ? `${selectedService} — ${cat?.label}`
       : (cat?.label ?? "");
-    localStorage.setItem("preselectService", value);
-    window.dispatchEvent(new CustomEvent("preselect-service", { detail: value }));
-    const el = document.getElementById("booking");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (value) localStorage.setItem("preselectService", value);
+    window.location.href = "/book";
   }
 
   const selected = allCategories.find(c => c.id === selectedId) ?? null;

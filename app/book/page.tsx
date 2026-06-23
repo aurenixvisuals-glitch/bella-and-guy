@@ -72,6 +72,24 @@ export default function BookPage() {
     });
   }, []);
 
+  // Pre-fill service/staff from Services or Team page
+  useEffect(() => {
+    const preService = localStorage.getItem("preselectService");
+    if (preService) {
+      setService(preService);
+      const catId = allCategories.find(c =>
+        c.services.some(s => `${s.name} — ${c.label}` === preService)
+      )?.id ?? allCategories.find(c => c.label === preService)?.id;
+      if (catId) setSelCat(catId);
+      localStorage.removeItem("preselectService");
+    }
+    const preStaff = localStorage.getItem("preselectStaff");
+    if (preStaff) {
+      setSelStaff(preStaff);
+      localStorage.removeItem("preselectStaff");
+    }
+  }, []);
+
   const selectedCatData = allCategories.find(c => c.id === selCat);
   const selectedServicePrice = (() => {
     if (!service) return null;

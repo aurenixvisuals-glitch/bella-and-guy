@@ -99,8 +99,8 @@ export default function Team() {
   }, []);
 
   function handleBook(name: string) {
-    const el = document.getElementById("booking");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    localStorage.setItem("preselectStaff", name);
+    window.location.href = "/book";
   }
 
   return (
