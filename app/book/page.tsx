@@ -1,9 +1,8 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { allCategories } from "../../lib/servicesData";
 import Navbar from "../../components/Navbar";
-import Services from "../../components/Services";
 import {
   Store, Home, Phone, MapPin, Clock, Star, Shield, Check,
   User, Mail, Sparkles, Calendar, MessageCircle, ChevronRight, X
@@ -62,7 +61,6 @@ export default function BookPage() {
   const [spamError, setSpamError]     = useState("");
   const [honeypot, setHoneypot]       = useState("");
   const [booked, setBooked]           = useState<any>(null);
-  const formRef = useRef<HTMLDivElement>(null);
 
   // Get today's date as minimum
   const todayStr = new Date().toISOString().split("T")[0];
@@ -96,13 +94,6 @@ export default function BookPage() {
       localStorage.removeItem("preselectStaff");
     }
   }, []);
-
-  // Called from Services section on same page
-  function handleServiceSelect(svc: string, catId: string) {
-    setService(svc);
-    setSelCat(catId);
-    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-  }
 
   // Build full address string from fields
   const fullAddress = [flatNo, street, landmark, city, pincode].filter(Boolean).join(", ");
@@ -542,16 +533,8 @@ export default function BookPage() {
         </div>
       </div>
 
-      {/* ── SERVICES SECTION ── */}
-      <Services
-        onServiceSelect={handleServiceSelect}
-        title="Choose a Service"
-        subtitle="Select a category, pick your service — it will be added to your booking below"
-        isHome={isHome}
-      />
-
       {/* ── BOOKING FORM ── */}
-      <div className="bk-page" style={{ paddingTop: 0 }} ref={formRef}>
+      <div className="bk-page" style={{ paddingTop: 0 }}>
         <div className="bk-main">
 
           {/* ── LEFT SIDEBAR ── */}
@@ -626,34 +609,66 @@ export default function BookPage() {
 
             <form onSubmit={handleSubmit}>
 
-              {/* Selected service display */}
-              {service ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(201,168,76,0.07)", border: "1.5px solid rgba(201,168,76,0.25)", borderRadius: 12, padding: "12px 16px", marginBottom: 24 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#C9A84C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Check size={16} color="#080808" />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(0,0,0,0.35)" }}>Selected Service</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#080808", marginTop: 2 }}>{service.split(" — ")[0]}</div>
-                    {selectedServicePrice !== null && <div style={{ fontSize: 12, color: "#2d8f5e", fontWeight: 600 }}>₹{selectedServicePrice.toLocaleString()}</div>}
-                  </div>
-                  <button type="button" onClick={() => { setService(""); setSelCat(""); }}
-                    style={{ background: "none", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 6, padding: "4px 10px", fontSize: 11, color: "rgba(0,0,0,0.4)", cursor: "pointer" }}>
-                    Change
-                  </button>
+              {/* ── SERVICE SELECTION ── */}
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>1</div>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Choose a Service</span>
                 </div>
-              ) : (
-                <div style={{ background: "rgba(245,101,101,0.05)", border: "1px dashed rgba(245,101,101,0.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "#e53e3e", display: "flex", alignItems: "center", gap: 8 }}>
-                  ↑ Please select a service from above to continue
+
+                {/* Category grid */}
+                <div className="bk-cat-grid">
+                  {allCategories.filter(c => isHome ? c.homeService : true).map(cat => (
+                    <button key={cat.id} type="button"
+                      className={`bk-cat-btn ${selCat === cat.id ? "active" : ""}`}
+                      onClick={() => { setSelCat(selCat === cat.id ? "" : cat.id); setService(""); }}>
+                      <span className="bk-cat-icon">{cat.icon}</span>
+                      {cat.label}
+                    </button>
+                  ))}
                 </div>
-              )}
+
+                {/* Service dropdown */}
+                {selCat && (
+                  <div style={{ marginTop: 14 }}>
+                    <label className="bk-label">
+                      Select {allCategories.find(c => c.id === selCat)?.label} Service *
+                    </label>
+                    <select
+                      value={service}
+                      onChange={e => setService(e.target.value)}
+                      className="bk-input"
+                      required
+                    >
+                      <option value="">— Pick a service —</option>
+                      {allCategories.find(c => c.id === selCat)?.services.map(s => (
+                        <option
+                          key={s.name}
+                          value={`${s.name} — ${allCategories.find(c => c.id === selCat)?.label}`}
+                        >
+                          {s.name}{s.popular ? " ★" : ""} — ₹{s.price}
+                        </option>
+                      ))}
+                    </select>
+                    {service && selectedServicePrice !== null && (
+                      <div className="bk-price-tag">
+                        <Check size={11} /> ₹{selectedServicePrice.toLocaleString()} · {allCategories.find(c => c.id === selCat)?.label}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!selCat && (
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>Select a category above to see services</div>
+                )}
+              </div>
 
               <hr className="bk-divider" />
 
-              {/* STEP 1 — Staff */}
+              {/* STEP 2 — Staff */}
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>1</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>2</div>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Staff Preference <span style={{ fontSize: 12, color: "#aaa", fontWeight: 400 }}>(optional)</span></span>
                 </div>
 
@@ -671,10 +686,10 @@ export default function BookPage() {
 
               <hr className="bk-divider" />
 
-              {/* STEP 2 — Date & Time */}
+              {/* STEP 3 — Date & Time */}
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>2</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>3</div>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Date & Time</span>
                 </div>
 
@@ -705,10 +720,10 @@ export default function BookPage() {
 
               <hr className="bk-divider" />
 
-              {/* STEP 3 — Personal details */}
+              {/* STEP 4 — Personal details */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>3</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>4</div>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Your Details</span>
                 </div>
 
