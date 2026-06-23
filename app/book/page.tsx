@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { allCategories } from "../../lib/servicesData";
 import Navbar from "../../components/Navbar";
+import Services from "../../components/Services";
 import {
   Store, Home, Phone, MapPin, Clock, Star, Shield, Check,
   User, Mail, Sparkles, Calendar, MessageCircle, ChevronRight, X
@@ -478,7 +479,13 @@ export default function BookPage() {
             At our salon in Wave City or at your doorstep — we confirm within 30 minutes.
           </p>
         </div>
+      </div>
 
+      {/* ── SERVICES SECTION ── */}
+      <Services />
+
+      {/* ── BOOKING FORM ── */}
+      <div className="bk-page" style={{ paddingTop: 0 }}>
         <div className="bk-main">
 
           {/* ── LEFT SIDEBAR ── */}
