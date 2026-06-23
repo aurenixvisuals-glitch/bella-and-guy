@@ -148,12 +148,12 @@ export default function BookPage() {
     <>
       <style>{`
         * { box-sizing: border-box; }
-        .bk-page { min-height: 100vh; background: #FAF7F0; padding-top: 80px; font-family: 'Inter', sans-serif; }
+        .bk-page { min-height: 100vh; background: #FAF7F0; font-family: 'Inter', sans-serif; }
 
         /* ── HERO STRIP ── */
         .bk-hero {
           background: linear-gradient(135deg, #080808 0%, #1a1200 50%, #080808 100%);
-          padding: 48px 32px 52px;
+          padding: 128px 32px 52px;
           text-align: center;
           position: relative;
           overflow: hidden;
