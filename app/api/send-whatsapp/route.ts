@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const INSTANCE_ID   = process.env.ULTRAMSG_INSTANCE_ID ?? "";
-const ULTRAMSG_TOKEN = process.env.ULTRAMSG_TOKEN ?? "";
-const OWNER_PHONE   = process.env.OWNER_WHATSAPP_PHONE ?? "919625928495";
+const ACCESS_TOKEN    = process.env.WHATSAPP_ACCESS_TOKEN    ?? "";
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID ?? "";
+const OWNER_PHONE     = process.env.OWNER_WHATSAPP_PHONE     ?? "919625928495";
+const API_VERSION     = "v20.0";
 
 function fmt12h(t: string) {
   if (!t) return t;
   const [hStr, mStr] = t.split(":");
   const h = parseInt(hStr, 10);
-  const ampm = h >= 12 ? "PM" : "AM";
-  return `${h % 12 || 12}:${mStr ?? "00"} ${ampm}`;
+  return `${h % 12 || 12}:${mStr ?? "00"} ${h >= 12 ? "PM" : "AM"}`;
 }
 
 function fmtDate(d: string) {
@@ -61,47 +61,53 @@ function buildMessage(b: {
 export async function POST(req: NextRequest) {
   try {
     const { booking } = await req.json();
-
     if (!booking) {
       return NextResponse.json({ ok: false, error: "No booking data" }, { status: 400 });
     }
 
-    if (!INSTANCE_ID || !ULTRAMSG_TOKEN) {
-      console.warn("[send-whatsapp] UltraMsg not configured — ULTRAMSG_INSTANCE_ID or ULTRAMSG_TOKEN missing");
+    if (!ACCESS_TOKEN || !PHONE_NUMBER_ID) {
+      console.warn("[whatsapp] WHATSAPP_ACCESS_TOKEN or WHATSAPP_PHONE_NUMBER_ID not set");
       return NextResponse.json({ ok: false, error: "WhatsApp not configured" });
     }
 
     const message = buildMessage(booking);
-    const to      = OWNER_PHONE.startsWith("+") ? OWNER_PHONE : `+${OWNER_PHONE}`;
-    const url     = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 
-    console.log(`[send-whatsapp] Sending to ${to} via UltraMsg instance ${INSTANCE_ID}`);
+    // Strip leading + if present — Meta expects digits only
+    const to = OWNER_PHONE.replace(/^\+/, "");
 
-    const body = new URLSearchParams({
-      token:    ULTRAMSG_TOKEN,
-      to,
-      body:     message,
-      priority: "10",
-    });
+    console.log(`[whatsapp] Sending to ${to} via WhatsApp Cloud API`);
 
-    const res  = await fetch(url, {
-      method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body:    body.toString(),
-    });
+    const res = await fetch(
+      `https://graph.facebook.com/${API_VERSION}/${PHONE_NUMBER_ID}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to,
+          type: "text",
+          text: { preview_url: false, body: message },
+        }),
+      }
+    );
 
     const data = await res.json().catch(() => ({}));
-    console.log("[send-whatsapp] UltraMsg response:", res.status, JSON.stringify(data));
+    console.log("[whatsapp] Meta response:", res.status, JSON.stringify(data));
 
-    if (!res.ok || data?.error) {
-      return NextResponse.json({ ok: false, error: data?.error ?? "UltraMsg error" }, { status: 502 });
+    if (!res.ok) {
+      const errMsg = data?.error?.message ?? JSON.stringify(data);
+      return NextResponse.json({ ok: false, error: errMsg }, { status: 502 });
     }
 
-    return NextResponse.json({ ok: true, msgId: data?.id });
+    return NextResponse.json({ ok: true, msgId: data?.messages?.[0]?.id });
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[send-whatsapp] ERROR:", msg);
+    console.error("[whatsapp] ERROR:", msg);
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }
