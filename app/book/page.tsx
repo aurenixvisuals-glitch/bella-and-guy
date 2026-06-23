@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../lib/supabase";
 import { allCategories } from "../../lib/servicesData";
-import Navbar from "../../components/Navbar";
 import {
   Store, Home, Check, User, Phone, Mail, MapPin,
   Clock, Star, X, Sparkles, Calendar, Edit2, ChevronRight,
@@ -290,7 +289,7 @@ export default function BookPage() {
 
         /* Progress bar */
         .pbk-bar {
-          position: sticky; top: 64px; z-index: 90;
+          position: sticky; top: 0; z-index: 90;
           background: rgba(255,255,255,0.95);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(0,0,0,0.07);
@@ -503,8 +502,6 @@ export default function BookPage() {
           .cat-grid { grid-template-columns: repeat(2, 1fr); }
         }
       `}</style>
-
-      <Navbar />
 
       {/* ── Progress Bar ── */}
       <div className="pbk-bar">
