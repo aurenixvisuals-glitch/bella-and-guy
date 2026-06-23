@@ -479,6 +479,30 @@ export default function BookPage() {
           .bk-hero { padding: 32px 16px 36px; }
           .bk-modal-actions { flex-direction: column; }
         }
+
+        /* ── SERVICE TYPE TOGGLE (top) ── */
+        .bk-toggle-section {
+          background: #fff;
+          border-bottom: 1px solid rgba(0,0,0,0.07);
+          padding: 20px 32px;
+        }
+        .bk-toggle-inner {
+          max-width: 1200px; margin: 0 auto;
+          display: flex; align-items: center; gap: 20px;
+          flex-wrap: wrap;
+        }
+        .bk-toggle-label {
+          font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+          text-transform: uppercase; color: rgba(0,0,0,0.35);
+          white-space: nowrap;
+        }
+        .bk-toggle-btns {
+          display: flex; gap: 10px; flex: 1; max-width: 400px;
+        }
+        @media (max-width: 600px) {
+          .bk-toggle-section { padding: 16px; }
+          .bk-toggle-btns { max-width: 100%; }
+        }
       `}</style>
 
       <Navbar />
@@ -498,11 +522,32 @@ export default function BookPage() {
         </div>
       </div>
 
+      {/* ── AT SALON / HOME SERVICE TOGGLE ── */}
+      <div className="bk-toggle-section">
+        <div className="bk-toggle-inner">
+          <span className="bk-toggle-label">Service Type:</span>
+          <div className="bk-toggle-btns">
+            <button type="button" className={`bk-type-btn ${!isHome ? "active" : ""}`} onClick={() => { setIsHome(false); setService(""); setSelCat(""); }}>
+              <Store size={15}/> At Salon
+            </button>
+            <button type="button" className={`bk-type-btn ${isHome ? "active" : ""}`} onClick={() => { setIsHome(true); setService(""); setSelCat(""); }}>
+              <Home size={15}/> Home Service
+            </button>
+          </div>
+          {isHome && (
+            <span style={{ fontSize: 12, color: "#8a6a1a", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 20, padding: "4px 12px", fontWeight: 600 }}>
+              ✓ Showing home-service only
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* ── SERVICES SECTION ── */}
       <Services
         onServiceSelect={handleServiceSelect}
         title="Choose a Service"
         subtitle="Select a category, pick your service — it will be added to your booking below"
+        isHome={isHome}
       />
 
       {/* ── BOOKING FORM ── */}
@@ -578,16 +623,6 @@ export default function BookPage() {
 
           {/* ── FORM ── */}
           <div className="bk-form-wrap">
-
-            {/* Salon / Home toggle */}
-            <div className="bk-type-row">
-              <button type="button" className={`bk-type-btn ${!isHome ? "active" : ""}`} onClick={() => setIsHome(false)}>
-                <Store size={15}/> At Salon
-              </button>
-              <button type="button" className={`bk-type-btn ${isHome ? "active" : ""}`} onClick={() => setIsHome(true)}>
-                <Home size={15}/> Home Service
-              </button>
-            </div>
 
             <form onSubmit={handleSubmit}>
 

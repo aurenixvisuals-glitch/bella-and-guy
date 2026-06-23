@@ -6,9 +6,10 @@ interface ServicesProps {
   onServiceSelect?: (service: string, catId: string) => void;
   title?: string;
   subtitle?: string;
+  isHome?: boolean;
 }
 
-export default function Services({ onServiceSelect, title, subtitle }: ServicesProps = {}) {
+export default function Services({ onServiceSelect, title, subtitle, isHome }: ServicesProps = {}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -58,7 +59,16 @@ export default function Services({ onServiceSelect, title, subtitle }: ServicesP
     }
   }
 
-  const selected = allCategories.find(c => c.id === selectedId) ?? null;
+  const visibleCategories = isHome === undefined ? allCategories : allCategories.filter(c => isHome ? c.homeService : true);
+  const selected = visibleCategories.find(c => c.id === selectedId) ?? null;
+
+  // Reset selection when isHome changes and selected cat is no longer visible
+  useEffect(() => {
+    if (selectedId && !visibleCategories.find(c => c.id === selectedId)) {
+      setSelectedId(null);
+      setSelectedService(null);
+    }
+  }, [isHome]);
 
   const PriceRows = ({ services }: { services: typeof allCategories[0]["services"] }) => (
     <>
@@ -291,7 +301,7 @@ export default function Services({ onServiceSelect, title, subtitle }: ServicesP
           </div>
 
           <div className="sv-grid">
-            {allCategories.map((cat, i) => (
+            {visibleCategories.map((cat, i) => (
               <div
                 key={cat.id}
                 className={`sv-card reveal-scale reveal-d${Math.min(i + 1, 12)} ${selectedId === cat.id ? "sv-active" : ""}`}
