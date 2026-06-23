@@ -4,9 +4,11 @@ import { allCategories } from "../lib/servicesData";
 
 interface ServicesProps {
   onServiceSelect?: (service: string, catId: string) => void;
+  title?: string;
+  subtitle?: string;
 }
 
-export default function Services({ onServiceSelect }: ServicesProps = {}) {
+export default function Services({ onServiceSelect, title, subtitle }: ServicesProps = {}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -283,9 +285,9 @@ export default function Services({ onServiceSelect }: ServicesProps = {}) {
               <span style={{ width: "20px", height: "1px", background: "#C9A84C", display: "inline-block" }} />
               What We Offer
             </div>
-            <h2 className="reveal sv-title">Our Premium Services</h2>
+            <h2 className="reveal sv-title">{title ?? "Our Premium Services"}</h2>
             <div className="sv-divider" />
-            <p className="reveal sv-subtitle">Tap a category, select your service, then book — done in seconds</p>
+            <p className="reveal sv-subtitle">{subtitle ?? "Tap a category, select your service, then book — done in seconds"}</p>
           </div>
 
           <div className="sv-grid">

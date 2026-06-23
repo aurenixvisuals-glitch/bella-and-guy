@@ -499,7 +499,11 @@ export default function BookPage() {
       </div>
 
       {/* ── SERVICES SECTION ── */}
-      <Services onServiceSelect={handleServiceSelect} />
+      <Services
+        onServiceSelect={handleServiceSelect}
+        title="Choose a Service"
+        subtitle="Select a category, pick your service — it will be added to your booking below"
+      />
 
       {/* ── BOOKING FORM ── */}
       <div className="bk-page" style={{ paddingTop: 0 }} ref={formRef}>
@@ -587,70 +591,34 @@ export default function BookPage() {
 
             <form onSubmit={handleSubmit}>
 
-              {/* STEP 1 — Service */}
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>1</div>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Choose a Service</span>
+              {/* Selected service display */}
+              {service ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(201,168,76,0.07)", border: "1.5px solid rgba(201,168,76,0.25)", borderRadius: 12, padding: "12px 16px", marginBottom: 24 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#C9A84C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Check size={16} color="#080808" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(0,0,0,0.35)" }}>Selected Service</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#080808", marginTop: 2 }}>{service.split(" — ")[0]}</div>
+                    {selectedServicePrice !== null && <div style={{ fontSize: 12, color: "#2d8f5e", fontWeight: 600 }}>₹{selectedServicePrice.toLocaleString()}</div>}
+                  </div>
+                  <button type="button" onClick={() => { setService(""); setSelCat(""); }}
+                    style={{ background: "none", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 6, padding: "4px 10px", fontSize: 11, color: "rgba(0,0,0,0.4)", cursor: "pointer" }}>
+                    Change
+                  </button>
                 </div>
-
-                <div className="bk-section-title">Service Category</div>
-                <div className="bk-cat-grid">
-                  {allCategories.map(cat => (
-                    <button key={cat.id} type="button"
-                      className={`bk-cat-btn ${selCat === cat.id ? "active" : ""}`}
-                      onClick={() => { setSelCat(cat.id); setService(""); }}>
-                      <span className="bk-cat-icon">{cat.icon}</span>
-                      {cat.label}
-                    </button>
-                  ))}
+              ) : (
+                <div style={{ background: "rgba(245,101,101,0.05)", border: "1px dashed rgba(245,101,101,0.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "#e53e3e", display: "flex", alignItems: "center", gap: 8 }}>
+                  ↑ Please select a service from above to continue
                 </div>
-
-                <div className="bk-field">
-                  <label className="bk-label">
-                    Select Service *
-                    {selCat && <span style={{ color: "#C9A84C", marginLeft: 6, textTransform: "none", letterSpacing: 0, fontWeight: 400 }}>({selectedCatData?.label})</span>}
-                  </label>
-                  <select
-                    value={service}
-                    onChange={e => setService(e.target.value)}
-                    className="bk-input" required
-                    style={{ cursor: "pointer" }}
-                  >
-                    <option value="">Choose a service...</option>
-                    {selCat
-                      ? allCategories.filter(c => c.id === selCat).map(cat => (
-                          <optgroup key={cat.id} label={`── ${cat.label} ──`}>
-                            {cat.services.map(s => {
-                              const val = `${s.name} — ${cat.label}`;
-                              return <option key={val} value={val}>{s.name} — ₹{s.price.toLocaleString()}{s.popular ? " ⭐" : ""}</option>;
-                            })}
-                          </optgroup>
-                        ))
-                      : allCategories.map(cat => (
-                          <optgroup key={cat.id} label={`── ${cat.label} ──`}>
-                            {cat.services.map(s => {
-                              const val = `${s.name} — ${cat.label}`;
-                              return <option key={val} value={val}>{s.name} — ₹{s.price.toLocaleString()}{s.popular ? " ⭐" : ""}</option>;
-                            })}
-                          </optgroup>
-                        ))
-                    }
-                  </select>
-                  {selectedServicePrice !== null && (
-                    <div className="bk-price-tag">
-                      <Check size={11}/> Service price: ₹{selectedServicePrice.toLocaleString()}
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
 
               <hr className="bk-divider" />
 
-              {/* STEP 2 — Staff */}
+              {/* STEP 1 — Staff */}
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>2</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>1</div>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Staff Preference <span style={{ fontSize: 12, color: "#aaa", fontWeight: 400 }}>(optional)</span></span>
                 </div>
 
@@ -668,10 +636,10 @@ export default function BookPage() {
 
               <hr className="bk-divider" />
 
-              {/* STEP 3 — Date & Time */}
+              {/* STEP 2 — Date & Time */}
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>3</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>2</div>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Date & Time</span>
                 </div>
 
@@ -702,10 +670,10 @@ export default function BookPage() {
 
               <hr className="bk-divider" />
 
-              {/* STEP 4 — Personal details */}
+              {/* STEP 3 — Personal details */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>4</div>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C9A84C", color: "#080808", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>3</div>
                   <span style={{ fontSize: 14, fontWeight: 600, color: "#080808" }}>Your Details</span>
                 </div>
 
