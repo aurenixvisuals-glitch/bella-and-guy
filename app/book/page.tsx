@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { allCategories } from "../../lib/servicesData";
 import Navbar from "../../components/Navbar";
@@ -52,11 +52,17 @@ export default function BookPage() {
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [notes, setNotes]             = useState("");
-  const [address, setAddress]         = useState("");
+  // Advanced address fields
+  const [flatNo, setFlatNo]           = useState("");
+  const [street, setStreet]           = useState("");
+  const [landmark, setLandmark]       = useState("");
+  const [city, setCity]               = useState("Ghaziabad");
+  const [pincode, setPincode]         = useState("");
   const [loading, setLoading]         = useState(false);
   const [spamError, setSpamError]     = useState("");
   const [honeypot, setHoneypot]       = useState("");
   const [booked, setBooked]           = useState<any>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   // Get today's date as minimum
   const todayStr = new Date().toISOString().split("T")[0];
@@ -90,6 +96,16 @@ export default function BookPage() {
       localStorage.removeItem("preselectStaff");
     }
   }, []);
+
+  // Called from Services section on same page
+  function handleServiceSelect(svc: string, catId: string) {
+    setService(svc);
+    setSelCat(catId);
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  }
+
+  // Build full address string from fields
+  const fullAddress = [flatNo, street, landmark, city, pincode].filter(Boolean).join(", ");
 
   const selectedCatData = allCategories.find(c => c.id === selCat);
   const selectedServicePrice = (() => {
@@ -134,7 +150,7 @@ export default function BookPage() {
           booking_date: bookingDate,
           booking_time: bookingTime,
           is_home_service: isHome,
-          address: isHome ? address : null,
+          address: isHome ? fullAddress : null,
           staff: staffVal || null,
         }])
         .select("id")
@@ -147,14 +163,15 @@ export default function BookPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "created",
-            booking: { full_name: fullName, email, phone: cleaned, service, booking_date: bookingDate, booking_time: bookingTime, address: isHome ? address : null },
+            booking: { full_name: fullName, email, phone: cleaned, service, booking_date: bookingDate, booking_time: bookingTime, address: isHome ? fullAddress : null },
           }),
         });
       } catch {}
 
-      setBooked({ id: inserted?.id, fullName, phone: cleaned, email, service, bookingDate, bookingTime, isHome, address, staff: staffVal, notes });
+      setBooked({ id: inserted?.id, fullName, phone: cleaned, email, service, bookingDate, bookingTime, isHome, address: fullAddress, staff: staffVal, notes });
       setFullName(""); setPhone(""); setEmail(""); setService(""); setSelCat("");
-      setBookingDate(""); setBookingTime(""); setAddress(""); setNotes("");
+      setBookingDate(""); setBookingTime(""); setNotes("");
+      setFlatNo(""); setStreet(""); setLandmark(""); setCity("Ghaziabad"); setPincode("");
       setSelStaff("Any Available"); setIsHome(false);
     } catch (err: any) {
       alert("Error: " + err.message);
@@ -482,10 +499,10 @@ export default function BookPage() {
       </div>
 
       {/* ── SERVICES SECTION ── */}
-      <Services />
+      <Services onServiceSelect={handleServiceSelect} />
 
       {/* ── BOOKING FORM ── */}
-      <div className="bk-page" style={{ paddingTop: 0 }}>
+      <div className="bk-page" style={{ paddingTop: 0 }} ref={formRef}>
         <div className="bk-main">
 
           {/* ── LEFT SIDEBAR ── */}
@@ -720,10 +737,45 @@ export default function BookPage() {
 
                 {isHome && (
                   <div className="bk-field">
-                    <label className="bk-label"><MapPin size={10} style={{ display: "inline", marginRight: 4 }} />Home Address *</label>
-                    <textarea value={address} onChange={e => setAddress(e.target.value)}
-                      placeholder="Full address for home service (house no., street, sector, landmark)..."
-                      className="bk-input" required={isHome} style={{ height: 80, resize: "none" }} />
+                    <label className="bk-label" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#8a6a1a", marginBottom: 10, display: "block" }}>
+                      <MapPin size={11} style={{ display: "inline", marginRight: 5 }} />Home Service Address *
+                    </label>
+                    <div style={{ background: "rgba(201,168,76,0.04)", border: "1.5px solid rgba(201,168,76,0.18)", borderRadius: 12, padding: "16px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div className="bk-2col">
+                        <div>
+                          <label className="bk-label">Flat / House No. *</label>
+                          <input type="text" value={flatNo} onChange={e => setFlatNo(e.target.value)}
+                            placeholder="e.g. A-204, House 12" className="bk-input" required={isHome} />
+                        </div>
+                        <div>
+                          <label className="bk-label">Pincode *</label>
+                          <input type="text" value={pincode} onChange={e => setPincode(e.target.value)}
+                            placeholder="e.g. 201301" className="bk-input" required={isHome} maxLength={6} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="bk-label">Street / Colony / Sector *</label>
+                        <input type="text" value={street} onChange={e => setStreet(e.target.value)}
+                          placeholder="e.g. Sector 5, Wave City" className="bk-input" required={isHome} />
+                      </div>
+                      <div className="bk-2col">
+                        <div>
+                          <label className="bk-label">Landmark <span style={{ textTransform:"none", fontWeight:400, letterSpacing:0, color:"rgba(0,0,0,0.3)" }}>(optional)</span></label>
+                          <input type="text" value={landmark} onChange={e => setLandmark(e.target.value)}
+                            placeholder="e.g. Near Metro Station" className="bk-input" />
+                        </div>
+                        <div>
+                          <label className="bk-label">City</label>
+                          <input type="text" value={city} onChange={e => setCity(e.target.value)}
+                            placeholder="City" className="bk-input" />
+                        </div>
+                      </div>
+                      {fullAddress && (
+                        <div style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#6b4f10" }}>
+                          <strong>Full address:</strong> {fullAddress}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

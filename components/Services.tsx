@@ -2,7 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { allCategories } from "../lib/servicesData";
 
-export default function Services() {
+interface ServicesProps {
+  onServiceSelect?: (service: string, catId: string) => void;
+}
+
+export default function Services({ onServiceSelect }: ServicesProps = {}) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
@@ -29,7 +33,14 @@ export default function Services() {
   }
 
   function handleServiceRowClick(name: string) {
-    setSelectedService(prev => prev === name ? null : name);
+    if (onServiceSelect && selectedId) {
+      const cat = allCategories.find(c => c.id === selectedId);
+      const value = `${name} — ${cat?.label}`;
+      setSelectedService(name);
+      onServiceSelect(value, selectedId);
+    } else {
+      setSelectedService(prev => prev === name ? null : name);
+    }
   }
 
   function handleBook() {
@@ -37,8 +48,12 @@ export default function Services() {
     const value = selectedService
       ? `${selectedService} — ${cat?.label}`
       : (cat?.label ?? "");
-    if (value) localStorage.setItem("preselectService", value);
-    window.location.href = "/book";
+    if (onServiceSelect && selectedId) {
+      onServiceSelect(value, selectedId);
+    } else {
+      if (value) localStorage.setItem("preselectService", value);
+      window.location.href = "/book";
+    }
   }
 
   const selected = allCategories.find(c => c.id === selectedId) ?? null;
@@ -357,7 +372,10 @@ export default function Services() {
                     className={`sv-book-btn ${selectedService ? "has-selection" : ""}`}
                     onClick={handleBook}
                   >
-                    {selectedService ? `Book Now →` : `Book ${selected.label} →`}
+                    {onServiceSelect
+                      ? (selectedService ? `✓ Selected — Scroll to Book` : `Select ${selected.label} →`)
+                      : (selectedService ? `Book Now →` : `Book ${selected.label} →`)
+                    }
                   </button>
                 </div>
               </div>
