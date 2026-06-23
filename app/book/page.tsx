@@ -157,14 +157,29 @@ export default function BookPage() {
         .select("id").single();
       if (error) throw error;
 
+      const bookingPayload = {
+        id: inserted?.id,
+        full_name: fullName, email, phone: cleaned,
+        service, booking_date: bookingDate, booking_time: bookingTime,
+        is_home_service: isHome, address: isHome ? fullAddress : null,
+        notes: notes || null,
+      };
+
+      // Email notification
       try {
         await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "created",
-            booking: { full_name: fullName, email, phone: cleaned, service, booking_date: bookingDate, booking_time: bookingTime, address: isHome ? fullAddress : null },
-          }),
+          body: JSON.stringify({ type: "created", booking: bookingPayload }),
+        });
+      } catch {}
+
+      // WhatsApp notification to salon owner
+      try {
+        await fetch("/api/send-whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ booking: bookingPayload }),
         });
       } catch {}
 
