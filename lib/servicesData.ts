@@ -3,13 +3,14 @@ export interface Category {
   id: string; label: string; desc: string;
   icon: string; color: string; img: string;
   homeService: boolean;
+  gender: "female" | "male" | "both";
   services: ServiceItem[];
 }
 
 export const allCategories: Category[] = [
   {
     id: "facial", label: "Facials", icon: "✦", color: "#f9f0e0",
-    img: "/images/services/facial.jpg", homeService: true,
+    img: "/images/services/facial.jpg", homeService: true, gender: "both",
     desc: "Advanced treatments for radiant, glowing skin",
     services: [
       { name: "VLCC", price: 600 },
@@ -37,7 +38,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "cleanup", label: "Cleanups", icon: "◈", color: "#eef5f0",
-    img: "/images/services/cleanup.jpg", homeService: true,
+    img: "/images/services/cleanup.jpg", homeService: true, gender: "both",
     desc: "Instantly fresh, glowing skin with signature cleanups",
     services: [
       { name: "Naturence Fruit", price: 500 },
@@ -50,7 +51,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "dtan", label: "D-Tan", icon: "◉", color: "#f0f4f9",
-    img: "/images/services/dtan.jpg", homeService: true,
+    img: "/images/services/dtan.jpg", homeService: true, gender: "female",
     desc: "Skin brightening & tan removal for an even complexion",
     services: [
       { name: "D-Tan Sara", price: 250 },
@@ -61,7 +62,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "bleach", label: "Bleach", icon: "◌", color: "#f9f0f5",
-    img: "/images/services/bleach.jpg", homeService: true,
+    img: "/images/services/bleach.jpg", homeService: true, gender: "female",
     desc: "Brightening treatments for a luminous complexion",
     services: [
       { name: "Fem", price: 250 },
@@ -76,7 +77,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "threading", label: "Threading", icon: "〜", color: "#f0f9f5",
-    img: "/images/services/threading.jpg", homeService: true,
+    img: "/images/services/threading.jpg", homeService: true, gender: "female",
     desc: "Precision brow & face shaping by skilled hands",
     services: [
       { name: "Threading (Eyebrows)", price: 30 },
@@ -87,7 +88,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "wax", label: "Waxing", icon: "◎", color: "#f9f5e8",
-    img: "/images/services/waxing.jpg", homeService: true,
+    img: "/images/services/waxing.jpg", homeService: true, gender: "female",
     desc: "Smooth, long-lasting hair removal with premium wax",
     services: [
       { name: "Brazilian Wax – Forehead", price: 50 },
@@ -111,7 +112,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "manicure", label: "Manicure", icon: "◇", color: "#f5f0f9",
-    img: "/images/services/manicure.jpg", homeService: true,
+    img: "/images/services/manicure.jpg", homeService: true, gender: "female",
     desc: "Complete nail care with premium products",
     services: [
       { name: "Manicure", price: 300 },
@@ -124,7 +125,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "pedicure", label: "Pedicure", icon: "◆", color: "#edf5f0",
-    img: "/images/services/pedicure.jpg", homeService: true,
+    img: "/images/services/pedicure.jpg", homeService: true, gender: "female",
     desc: "Relaxing foot care, scrub & deep hydration",
     services: [
       { name: "Pedicure", price: 550 },
@@ -137,7 +138,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "haircut", label: "Haircut & Style", icon: "✂", color: "#f0f0f9",
-    img: "/images/services/haircut.jpg", homeService: true,
+    img: "/images/services/haircut.jpg", homeService: true, gender: "both",
     desc: "Precision cuts, fades & modern styling",
     services: [
       { name: "Haircut", price: 150, popular: true },
@@ -148,7 +149,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "beard", label: "Beard & Shave", icon: "✧", color: "#f9f0e8",
-    img: "/images/services/beard.jpg", homeService: true,
+    img: "/images/services/beard.jpg", homeService: true, gender: "male",
     desc: "Expert beard grooming & hot towel shave",
     services: [
       { name: "Beard Trim", price: 100, popular: true },
@@ -159,7 +160,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "haircolor", label: "Hair Color", icon: "◐", color: "#f9eef0",
-    img: "/images/services/haircolor.jpg", homeService: false,
+    img: "/images/services/haircolor.jpg", homeService: false, gender: "both",
     desc: "Global colors, highlights & balayage by experts",
     services: [
       { name: "Global Color", price: 800, popular: true },
@@ -170,7 +171,7 @@ export const allCategories: Category[] = [
   },
   {
     id: "massage", label: "Head Massage", icon: "◑", color: "#eef0f9",
-    img: "/images/services/massage.jpg", homeService: true,
+    img: "/images/services/massage.jpg", homeService: true, gender: "both",
     desc: "Deep relaxation scalp massage with premium oils",
     services: [
       { name: "Head Massage", price: 200, popular: true },
