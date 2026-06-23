@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { allCategories } from "../../lib/servicesData";
+import Navbar from "../../components/Navbar";
 import {
   Store, Home, Phone, MapPin, Clock, Star, Shield, Check,
   User, Mail, Sparkles, Calendar, MessageCircle, ChevronRight, X
@@ -444,6 +445,7 @@ export default function BookPage() {
         }
       `}</style>
 
+      <Navbar />
       {/* Hero strip */}
       <div className="bk-page">
         <div className="bk-hero">
