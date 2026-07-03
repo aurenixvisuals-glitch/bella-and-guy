@@ -223,10 +223,17 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <span className="footer-copyright">© 2026 Bella & Guy. All Rights Reserved.</span>
-          <span className="footer-location">
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "rgba(201,168,76,0.4)", display: "inline-block" }} />
-            Wave City, Ghaziabad, UP
-          </span>
+          <a href="/terms" style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            fontSize: "11px", fontWeight: 600, letterSpacing: "0.1em",
+            color: "rgba(201,168,76,0.6)", textDecoration: "none",
+            textTransform: "uppercase", border: "1px solid rgba(201,168,76,0.2)",
+            padding: "6px 14px", borderRadius: "4px", transition: "all 0.25s ease",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#C9A84C"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(201,168,76,0.6)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)"; e.currentTarget.style.background = "transparent"; }}>
+            📋 Terms &amp; Conditions
+          </a>
           <a href="/login" style={{ fontSize: "11px", color: "rgba(255,255,255,0.08)", textDecoration: "none", letterSpacing: "0.06em", transition: "color 0.3s ease" }}
             onMouseEnter={e => (e.currentTarget.style.color = "rgba(201,168,76,0.5)") as any}
             onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.08)") as any}>

@@ -251,74 +251,10 @@ export default function Navbar() {
         .profile-logout:hover { background: rgba(245,101,101,0.08); color: #f87171; }
       `}</style>
 
-      {/* Top T&C Bar */}
-      <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 1001,
-        background: "#0e0a04",
-        borderBottom: "1px solid rgba(201,168,76,0.15)",
-        height: "34px",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        gap: "32px", overflow: "hidden",
-        padding: "0 16px",
-      }}>
-        <style>{`
-          .tc-bar-ticker {
-            display: flex; align-items: center; gap: 40px;
-            animation: tcScroll 28s linear infinite;
-            white-space: nowrap;
-          }
-          @keyframes tcScroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          .tc-bar-item {
-            display: flex; align-items: center; gap: 7px;
-            font-size: 10.5px; font-weight: 500;
-            color: rgba(255,255,255,0.45);
-            letter-spacing: 0.05em;
-            flex-shrink: 0;
-          }
-          .tc-bar-dot { color: #C9A84C; font-size: 12px; }
-          .tc-bar-link {
-            font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-            color: #C9A84C; text-decoration: none; text-transform: uppercase;
-            border-left: 1px solid rgba(201,168,76,0.3);
-            padding-left: 14px; margin-left: 6px; flex-shrink: 0;
-            transition: opacity 0.2s;
-          }
-          .tc-bar-link:hover { opacity: 0.7; }
-        `}</style>
-        <div className="tc-bar-ticker">
-          {[
-            "10-min grace period · ₹10/min waiting after that",
-            "Last-minute cancellations may incur 100% charges",
-            "Delays over 30 mins may result in cancellation",
-            "Inform us of allergies or skin conditions before service",
-            "Parking & society charges payable by client",
-            "Payment due immediately after service",
-            "Misconduct may lead to immediate service termination",
-            "10-min grace period · ₹10/min waiting after that",
-            "Last-minute cancellations may incur 100% charges",
-            "Delays over 30 mins may result in cancellation",
-            "Inform us of allergies or skin conditions before service",
-            "Parking & society charges payable by client",
-            "Payment due immediately after service",
-            "Misconduct may lead to immediate service termination",
-          ].map((text, i) => (
-            <span key={i} className="tc-bar-item">
-              <span className="tc-bar-dot">·</span>
-              {text}
-            </span>
-          ))}
-        </div>
-        <a href="/terms" className="tc-bar-link">T&amp;C</a>
-      </div>
-
       <nav style={{
         position: "fixed", zIndex: 1000,
-        marginTop: "34px",
         transition: "top 0.6s cubic-bezier(0.4,0,0.2,1), left 0.6s cubic-bezier(0.4,0,0.2,1), right 0.6s cubic-bezier(0.4,0,0.2,1), border-radius 0.6s cubic-bezier(0.4,0,0.2,1), background 0.6s cubic-bezier(0.4,0,0.2,1), box-shadow 0.6s cubic-bezier(0.4,0,0.2,1), border 0.6s cubic-bezier(0.4,0,0.2,1)",
-        top:    scrolled ? "44px" : "34px",
+        top:    scrolled ? "10px" : "0",
         left:   scrolled ? "16px" : "0",
         right:  scrolled ? "16px" : "0",
         borderRadius: scrolled ? "16px" : "0",
