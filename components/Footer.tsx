@@ -1,7 +1,7 @@
 "use client";
 
 export default function Footer() {
-  const services = ["Facial & Cleanup", "Waxing & Threading", "Hair Color", "Bridal Makeup", "Men's Haircut", "Home Service"];
+  const services = ["Waxing", "D-Tan & Bleach", "Cleanups", "Facials", "Japanese Rituals", "Manicure & Pedicure", "Body Services", "Hair Spa", "Hair Color", "Men's Grooming", "Men's Color"];
   const links = [
     { label: "Home", href: "#home" },
     { label: "Services", href: "#services" },
@@ -175,9 +175,9 @@ export default function Footer() {
             <div className="footer-brand-name">
               Bella <span style={{ color: "#C9A84C" }}>&</span> Guy
             </div>
-            <div className="footer-brand-sub">Unisex Salon · Wave City</div>
+            <div className="footer-brand-sub">Home Beauty Service · Wave City</div>
             <p className="footer-desc">
-              Premium beauty & grooming for men and women. At our salon in Ghaziabad, or at your doorstep.
+              Premium beauty & grooming delivered to your doorstep. Certified professionals, 50+ services, zero travel needed.
             </p>
             <div className="footer-social-row">
               {/* Instagram */}
@@ -204,18 +204,18 @@ export default function Footer() {
 
           <div>
             <div className="footer-col-title">Quick Links</div>
-            {links.map((l, i) => (
-              <a key={i} href={l.href} className="footer-link">{l.label}</a>
+            {links.filter(l => l.label !== "Home Service").map((l, i) => (
+              <a key={i} href={l.href} className="footer-link">{l.label === "Book Appointment" ? "Book Home Service" : l.label}</a>
             ))}
           </div>
 
           <div>
             <div className="footer-col-title">Contact</div>
             <span className="footer-contact-item">Wave City, Ghaziabad, UP 201003</span>
-            <a href="tel:+919876543210" className="footer-contact-item">+91 98765 43210</a>
+            <a href="tel:+919625928495" className="footer-contact-item">+91 96259 28495</a>
             <span className="footer-contact-item">Mon – Sun, 9:00 AM – 8:00 PM</span>
             <a href="/book" className="footer-book-btn">
-              Book Now →
+              Book Home Service →
             </a>
           </div>
         </div>

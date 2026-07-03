@@ -37,7 +37,7 @@ export default function BookPage() {
   const [isHome, setIsHome]           = useState<boolean | null>(null);
   const [gender, setGender]           = useState<"female" | "male" | "">("");
   const [selCat, setSelCat]           = useState("");
-  const [service, setService]         = useState("");
+  const [services, setServices]       = useState<string[]>([]);
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [fullName, setFullName]       = useState("");
@@ -68,10 +68,24 @@ export default function BookPage() {
         if (m?.email)     setEmail(session.user.email || "");
       }
     });
+    const preGender = localStorage.getItem("preselectGender");
+    if (preGender === "female" || preGender === "male") {
+      setGender(preGender);
+      localStorage.removeItem("preselectGender");
+    }
     const pre = localStorage.getItem("preselectService");
     if (pre) {
-      setService(pre);
-      const cat = allCategories.find(c => c.services.some(s => `${s.name} — ${c.label}` === pre));
+      setServices([pre]);
+      const preParts = pre.split(" — ");
+      const preLabel = preParts[preParts.length - 1];
+      const preKey   = preParts.slice(0, -1).join(" — ");
+      const cat = allCategories.find(c =>
+        c.label === preLabel &&
+        c.services.some(s => {
+          const key = s.group ? `${s.group} – ${s.name}` : s.name;
+          return key === preKey || s.name === preKey;
+        })
+      );
       if (cat) setSelCat(cat.id);
       localStorage.removeItem("preselectService");
     }
@@ -97,7 +111,7 @@ export default function BookPage() {
     if (n <= 1) { setIsHome(null); }
     if (n <= 2) { setGender(""); }
     if (n <= 3) { setSelCat(""); }
-    if (n <= 4) { setService(""); }
+    if (n <= 4) { setServices([]); }
     if (n <= 5) { setBookingDate(""); }
     if (n <= 6) { setBookingTime(""); }
     advance(n);
@@ -112,15 +126,24 @@ export default function BookPage() {
 
   const selectedCat = allCategories.find(c => c.id === selCat);
 
-  const servicePrice = (() => {
-    if (!service) return null;
-    const [sName] = service.split(" — ");
-    for (const cat of allCategories) {
-      const sv = cat.services.find(s => s.name === sName);
-      if (sv) return sv.price;
+  const totalPrice = (() => {
+    if (services.length === 0) return null;
+    let sum = 0;
+    for (const svc of services) {
+      const parts = svc.split(" — ");
+      if (parts.length < 2) continue;
+      const sKey = parts.slice(0, -1).join(" — ");
+      for (const cat of allCategories) {
+        const found = cat.services.find(s => {
+          const key = s.group ? `${s.group} – ${s.name}` : s.name;
+          return key === sKey || s.name === sKey;
+        });
+        if (found) { sum += found.price; break; }
+      }
     }
-    return null;
+    return sum > 0 ? sum : null;
   })();
+  const service = services.join(", ");
 
   const fullAddress = [flatNo, street, landmark, city, pincode].filter(Boolean).join(", ");
 
@@ -135,6 +158,11 @@ export default function BookPage() {
       return;
     }
     if (isHome && !fullAddress) { setSpamError("Please enter your address for home service."); return; }
+    if (services.length === 0) { setSpamError("Please select at least one service."); return; }
+    if ((totalPrice ?? 0) < 1100) {
+      setSpamError(`Minimum booking value of ₹1,100 required. Current total: ₹${totalPrice?.toLocaleString() ?? 0}. Please go back and add more services.`);
+      return;
+    }
 
     const twoHrsAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const { count } = await supabase
@@ -152,7 +180,6 @@ export default function BookPage() {
           full_name: fullName, phone: cleaned, email: email || null,
           service, booking_date: bookingDate, booking_time: bookingTime,
           is_home_service: isHome, address: isHome ? fullAddress : null,
-          staff: null, notes: notes || null,
         }])
         .select("id").single();
       if (error) throw error;
@@ -162,7 +189,6 @@ export default function BookPage() {
         full_name: fullName, email, phone: cleaned,
         service, booking_date: bookingDate, booking_time: bookingTime,
         is_home_service: isHome, address: isHome ? fullAddress : null,
-        notes: notes || null,
       };
 
       // Email notification
@@ -183,7 +209,7 @@ export default function BookPage() {
         });
       } catch {}
 
-      setBooked({ id: inserted?.id, fullName, phone: cleaned, email, service, bookingDate, bookingTime, isHome, address: fullAddress, notes });
+      setBooked({ id: inserted?.id, fullName, phone: cleaned, email, service, bookingDate, bookingTime, isHome, address: fullAddress });
     } catch (err: any) {
       alert("Booking failed: " + err.message);
     } finally {
@@ -193,10 +219,14 @@ export default function BookPage() {
 
   /* ── Step summaries ────────────────────────────────── */
   const summaries: Record<number, string> = {
-    1: isHome !== null ? (isHome ? "Home Service" : "At Salon — Wave City") : "",
+    1: isHome !== null ? "Home Service" : "",
     2: gender === "female" ? "Female" : gender === "male" ? "Male" : "",
     3: selectedCat?.label ?? "",
-    4: service ? `${service.split(" — ")[0]}  ·  ₹${servicePrice?.toLocaleString() ?? ""}` : "",
+    4: services.length > 0
+      ? (services.length === 1
+          ? `${services[0].split(" — ")[0]}  ·  ₹${totalPrice?.toLocaleString() ?? ""}`
+          : `${services.length} services  ·  ₹${totalPrice?.toLocaleString() ?? ""}`)
+      : "",
     5: bookingDate ? formatDate(bookingDate) : "",
     6: bookingTime ? (TIME_SLOTS.find(s => s.value === bookingTime)?.label ?? bookingTime) : "",
     7: fullName ? `${fullName}  ·  ${phone}` : "",
@@ -548,7 +578,7 @@ export default function BookPage() {
             Book an Appointment
           </h1>
           <p style={{ fontSize: 13, color: "rgba(255,255,255,0.38)", marginTop: 10, marginBottom: 0 }}>
-            At salon or home — we confirm within 30 minutes
+            Home service — we confirm within 30 minutes
           </p>
         </div>
       </div>
@@ -559,13 +589,12 @@ export default function BookPage() {
         {/* ─ STEP 1: LOCATION ─ */}
         <StepCard num={1} title="Where would you like your service?">
           <div style={{ display: "flex", gap: 12 }}>
-            <div className={`loc-card ${isHome === false ? "sel" : ""}`} onClick={() => { setIsHome(false); advance(2); }}>
+            <div className="loc-card" onClick={() => { window.location.href = "/#contact"; }}>
               <div className="loc-icon" style={{ background: "rgba(201,168,76,0.1)" }}>
                 <Store size={26} color="#C9A84C" />
               </div>
               <div style={{ fontWeight: 700, fontSize: 14, color: "#080808" }}>At Salon</div>
-              <div style={{ fontSize: 11, color: "#888", lineHeight: 1.4 }}>Visit us at Wave City, Ghaziabad</div>
-              {isHome === false && <div style={{ fontSize: 11, fontWeight: 700, color: "#2d8f5e" }}><Check size={11} style={{ display: "inline" }} /> Selected</div>}
+              <div style={{ fontSize: 11, color: "#888", lineHeight: 1.4 }}>Contact us to visit the salon</div>
             </div>
             <div className={`loc-card ${isHome === true ? "sel" : ""}`} onClick={() => { setIsHome(true); advance(2); }}>
               <div className="loc-icon" style={{ background: "rgba(45,143,94,0.1)" }}>
@@ -614,11 +643,13 @@ export default function BookPage() {
           {selectedCat ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {selectedCat.services.map(svc => {
-                const val = `${svc.name} — ${selectedCat.label}`;
-                const isSel = service === val;
+                const val = svc.group
+                  ? `${svc.group} – ${svc.name} — ${selectedCat.label}`
+                  : `${svc.name} — ${selectedCat.label}`;
+                const isSel = services.includes(val);
                 return (
-                  <div key={svc.name} className={`svc-card ${isSel ? "sel" : ""}`}
-                    onClick={() => { setService(val); advance(5); }}>
+                  <div key={`${svc.group ?? ""}-${svc.name}`} className={`svc-card ${isSel ? "sel" : ""}`}
+                    onClick={() => setServices(prev => prev.includes(val) ? prev.filter(s => s !== val) : [...prev, val])}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: "#080808" }}>{svc.name}</span>
@@ -626,6 +657,7 @@ export default function BookPage() {
                           <span style={{ fontSize: 9, fontWeight: 700, background: "rgba(201,168,76,0.15)", color: "#8a6a1a", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 20, padding: "1px 7px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Popular</span>
                         )}
                       </div>
+                      {svc.group && <div style={{ fontSize: 10, color: "#C9A84C", fontWeight: 600, marginTop: 2, letterSpacing: "0.04em" }}>{svc.group}</div>}
                       <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{selectedCat.desc}</div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -635,6 +667,39 @@ export default function BookPage() {
                   </div>
                 );
               })}
+
+              {/* ── Running total + Continue ── */}
+              {services.length > 0 && (
+                <div style={{ background: "rgba(8,8,8,0.03)", border: "1px solid rgba(0,0,0,0.09)", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 4 }}>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#080808" }}>
+                      {services.length} service{services.length > 1 ? "s" : ""} selected
+                    </div>
+                    <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                      Total: <strong style={{ color: "#C9A84C" }}>₹{totalPrice?.toLocaleString()}</strong>
+                      {(totalPrice ?? 0) < 1100 && (
+                        <span style={{ color: "#c53030", marginLeft: 8 }}>
+                          · Add ₹{(1100 - (totalPrice ?? 0)).toLocaleString()} more to proceed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {(totalPrice ?? 0) >= 1100 && (
+                    <button className="bk2-next" onClick={() => advance(5)}>
+                      Continue <ChevronRight size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* ── Min booking info ── */}
+              <div style={{ display: "flex", gap: 10, background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 10, padding: "11px 14px", alignItems: "flex-start" }}>
+                <span style={{ fontSize: 15, color: "#C9A84C", flexShrink: 0, lineHeight: 1 }}>ℹ</span>
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "#8a6a1a", marginBottom: 2 }}>Minimum Home Service Value: ₹1,100</div>
+                  <div style={{ fontSize: 11, color: "#aaa", lineHeight: 1.5 }}>Our certified professionals travel to your location. You can select multiple services — minimum booking value of ₹1,100 applies.</div>
+                </div>
+              </div>
             </div>
           ) : (
             <div style={{ color: "#aaa", fontSize: 13 }}>Please select a category first.</div>
@@ -768,7 +833,7 @@ export default function BookPage() {
             <div className="rv-row">
               <div className="rv-icon"><Store size={13} /></div>
               <div className="rv-key">Location</div>
-              <div className="rv-val">{isHome ? "Home Service" : "At Salon — Wave City"}</div>
+              <div className="rv-val">Home Service</div>
               <div className="rv-edit" onClick={() => editStep(1)}>Edit</div>
             </div>
             <div className="rv-row">
@@ -785,8 +850,12 @@ export default function BookPage() {
             </div>
             <div className="rv-row">
               <div className="rv-icon"><Star size={13} /></div>
-              <div className="rv-key">Service</div>
-              <div className="rv-val">{service.split(" — ")[0]}</div>
+              <div className="rv-key">Service{services.length > 1 ? "s" : ""}</div>
+              <div className="rv-val">
+                {services.map((s, i) => (
+                  <div key={i} style={{ lineHeight: 1.6 }}>{s.split(" — ")[0]}</div>
+                ))}
+              </div>
               <div className="rv-edit" onClick={() => editStep(4)}>Edit</div>
             </div>
             <div className="rv-row">
@@ -836,10 +905,12 @@ export default function BookPage() {
           </div>
 
           {/* Price summary */}
-          {servicePrice !== null && (
+          {totalPrice !== null && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: 10, padding: "12px 16px", marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(0,0,0,0.45)" }}>Total</span>
-              <span style={{ fontSize: 20, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#080808" }}>₹{servicePrice.toLocaleString()}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(0,0,0,0.45)" }}>
+                Total{services.length > 1 ? ` (${services.length} services)` : ""}
+              </span>
+              <span style={{ fontSize: 20, fontWeight: 700, fontFamily: "'Cormorant Garamond', serif", color: "#080808" }}>₹{totalPrice.toLocaleString()}</span>
             </div>
           )}
 
@@ -878,10 +949,10 @@ export default function BookPage() {
             </div>
             <div style={{ padding: "16px 24px" }}>
               {[
-                { icon: <Sparkles size={12} />, key: "Service", val: booked.service.split(" — ")[0] },
+                { icon: <Sparkles size={12} />, key: "Service", val: booked.service.split(", ").map((s: string) => s.split(" — ")[0]).join(", ") },
                 { icon: <Calendar size={12} />, key: "Date", val: formatDate(booked.bookingDate) },
                 { icon: <Clock size={12} />, key: "Time", val: TIME_SLOTS.find(s => s.value === booked.bookingTime)?.label ?? booked.bookingTime },
-                { icon: <MapPin size={12} />, key: "Type", val: booked.isHome ? "Home Service" : "At Salon — Wave City" },
+                { icon: <MapPin size={12} />, key: "Type", val: "Home Service" },
               ].map((r, i) => (
                 <div key={i} className="rv-row">
                   <div className="rv-icon">{r.icon}</div>

@@ -9,17 +9,16 @@ const steps = [
 ];
 
 const homeServices = [
-  { icon: "💍", name: "Bridal Makeup", popular: true },
-  { icon: "💅", name: "Manicure & Pedicure", popular: false },
-  { icon: "🌿", name: "Facial & Cleanup", popular: true },
-  { icon: "✂️", name: "Haircut & Styling", popular: false },
-  { icon: "🪒", name: "Men's Grooming", popular: false },
-  { icon: "🌸", name: "Waxing & Threading", popular: true },
+  { icon: "◎", name: "Waxing",           popular: true  },
+  { icon: "◈", name: "D-Tan & Bleach",   popular: false },
+  { icon: "◉", name: "Cleanups",         popular: true  },
+  { icon: "✦", name: "Facials",          popular: true  },
+  { icon: "✿", name: "Japanese Rituals", popular: false },
 ];
 
 const badges = [
   { icon: "✓", text: "Verified Professionals" },
-  { icon: "✓", text: "100% Safe & Hygienic" },
+  { icon: "✓", text: "100% Original Products" },
   { icon: "✓", text: "On-time Guarantee" },
   { icon: "✓", text: "No Hidden Charges" },
 ];
@@ -224,7 +223,7 @@ export default function HomeService() {
 
           <div style={{ textAlign: "center", marginBottom: "72px" }}>
             <div className="reveal">
-              <span className="hs-badge">Home Service Available</span>
+              <span className="hs-badge">We Come To You</span>
             </div>
             <h2 className="reveal reveal-delay-1" style={{
               fontFamily: "'Cormorant Garamond', serif",
@@ -238,8 +237,8 @@ export default function HomeService() {
               background: "linear-gradient(90deg, transparent, #C9A84C, transparent)",
               margin: "0 auto 20px"
             }} />
-            <p className="reveal reveal-delay-3" style={{ color: "rgba(255,255,255,0.45)", fontSize: "16px", maxWidth: "460px", margin: "0 auto" }}>
-              Our certified experts come fully equipped to your location — professional results, zero travel needed.
+            <p className="reveal reveal-delay-3" style={{ color: "rgba(255,255,255,0.45)", fontSize: "16px", maxWidth: "480px", margin: "0 auto" }}>
+              Premium beauty services delivered to your doorstep — certified experts arrive fully equipped, no travel needed.
             </p>
           </div>
 
@@ -253,7 +252,7 @@ export default function HomeService() {
                 color: "#FFFFFF", marginBottom: "24px",
                 letterSpacing: "0.02em"
               }}>
-                Available at Home
+                All Services at Home
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 {homeServices.map((s, i) => (

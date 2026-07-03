@@ -18,7 +18,7 @@ const serviceItems = [
 const trustItems = [
   { icon: "★", text: "4.9 Google Rating" },
   { icon: "✓", text: "Verified Professionals" },
-  { icon: "◎", text: "100% Hygienic" },
+  { icon: "◎", text: "100% Original Products" },
   { icon: "★", text: "2,000+ Happy Clients" },
   { icon: "✓", text: "On-time Guarantee" },
   { icon: "◎", text: "Premium Products" },

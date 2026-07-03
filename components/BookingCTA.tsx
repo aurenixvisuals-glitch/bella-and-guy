@@ -97,24 +97,23 @@ export default function BookingCTA() {
         <div className="bcta-inner">
           <div className="bcta-badge">
             <span className="bcta-pill-dot" />
-            Book Your Appointment
+            Book Your Home Service
           </div>
 
           <h2 className="bcta-title">
-            Ready for a <span>Glow-Up?</span>
+            Premium Salon, At Your <span>Doorstep</span>
           </h2>
 
           <p className="bcta-sub">
-            Book online in under 2 minutes. Choose your service, pick your stylist,
-            and select a time — we confirm via WhatsApp within 30 minutes.
+            Book your at-home beauty service in under 2 minutes. Our certified experts arrive fully equipped — salon-quality results, zero travel needed.
           </p>
 
           <div className="bcta-pills">
             {[
-              "15+ Expert Professionals",
-              "At Salon & Home Service",
+              "15+ Certified Professionals",
+              "Home Service Only",
               "Confirmed in 30 Minutes",
-              "Starting from ₹30",
+              "Starting from ₹50",
               "9 AM – 8 PM, Every Day",
             ].map(p => (
               <div key={p} className="bcta-pill">
@@ -132,7 +131,7 @@ export default function BookingCTA() {
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
-              Book Appointment
+              Book Home Service
             </Link>
             <a href="https://wa.me/919625928495" target="_blank" rel="noopener noreferrer" className="bcta-wa-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

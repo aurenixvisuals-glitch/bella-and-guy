@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: "Which products do you use?",
-    a: "We use premium international brands including Wella, Schwarzkopf, O3+, and VLCC. All products are 100% authentic and dermatologically approved."
+    a: "We use premium international brands including Streax, Loreal, Schwarzkopf, Lotus, O3+, Kanpeki, Casmara and Rica. All products are 100% authentic and dermatologically approved."
   },
   {
     q: "Can I get bridal makeup at home?",

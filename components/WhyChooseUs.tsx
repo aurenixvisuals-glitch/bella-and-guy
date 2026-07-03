@@ -14,7 +14,7 @@ const features = [
   },
   {
     title: "Premium Products",
-    desc: "We exclusively use Wella, Schwarzkopf, O3+, VLCC & Lotus — 100% authentic, globally recognized brands.",
+    desc: "We exclusively use Streax, Loreal, Schwarzkopf, Lotus, O3+, Kanpeki, Casmara & Rica — 100% authentic, globally recognized brands.",
     badge: "Top brands only",
     svg: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -44,8 +44,8 @@ const features = [
   },
   {
     title: "Transparent Pricing",
-    desc: "No hidden charges, ever. What you see is what you pay — services starting from just ₹30.",
-    badge: "Starts at ₹30",
+    desc: "No hidden charges, ever. What you see is what you pay — services starting from just ₹50.",
+    badge: "Starts at ₹50",
     svg: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>

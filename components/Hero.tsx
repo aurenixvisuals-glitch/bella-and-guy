@@ -390,29 +390,29 @@ export default function Hero() {
 
             <div className={`hero-badge ${textVisible ? "vis" : ""}`}>
               <span className="hero-badge-live" />
-              <span className="hero-badge-text">Wave City&#39;s Premium Unisex Salon</span>
+              <span className="hero-badge-text">Wave City&#39;s Premium Home Beauty Service</span>
             </div>
 
             <h1 className="hero-h1">
-              <span className={`hw hw0 ${textVisible ? "vis" : ""}`}>Look&nbsp;</span>
-              <span className={`hw hw1 ${textVisible ? "vis" : ""}`}>Your</span>
+              <span className={`hw hw0 ${textVisible ? "vis" : ""}`}>Luxury&nbsp;</span>
+              <span className={`hw hw1 ${textVisible ? "vis" : ""}`}>Salon</span>
               <br />
               <span className={`hw hw2 ${textVisible ? "vis" : ""}`}>
-                <span className="hero-gold-word">Absolute Best</span>
+                <span className="hero-gold-word">At Your Doorstep</span>
               </span>
             </h1>
 
             <p className={`hero-tag ${textVisible ? "vis" : ""}`}>
-              Where Beauty Meets Affordability
+              Professional beauty treatments delivered to your home — certified experts, premium products, guaranteed results.
             </p>
 
             <div className={`hero-ctas ${textVisible ? "vis" : ""}`}>
-              <a href="/book" className="cta-gold">Book Appointment →</a>
-              <a href="#home-service" className="cta-outline">Home Service</a>
+              <a href="/book" className="cta-gold">Book Home Service →</a>
+              <a href="tel:+919625928495" className="cta-outline">📞 Call Now</a>
             </div>
 
             <div className={`trust-row ${textVisible ? "vis" : ""}`}>
-              {["Verified Professionals", "100% Hygienic", "On-time Guarantee", "No Hidden Charges"].map((t, i) => (
+              {["Certified Professionals", "100% Original Products", "On-time Guarantee", "No Hidden Charges"].map((t, i) => (
                 <span key={i} className="trust-item"><span className="trust-dot" />{t}</span>
               ))}
             </div>
