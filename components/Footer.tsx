@@ -9,6 +9,7 @@ export default function Footer() {
     { label: "Gallery", href: "#gallery" },
     { label: "Book Appointment", href: "/book" },
     { label: "Contact", href: "#contact" },
+    { label: "Terms & Conditions", href: "/terms" },
   ];
 
   return (
