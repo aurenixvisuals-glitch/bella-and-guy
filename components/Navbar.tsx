@@ -76,6 +76,7 @@ export default function Navbar() {
     { label: "Gallery", href: "#gallery", id: "gallery" },
     { label: "Reviews", href: "#reviews", id: "reviews" },
     { label: "Contact", href: "#contact", id: "contact" },
+    { label: "T&C", href: "/terms", id: "terms" },
   ];
 
   const menuItems = [
